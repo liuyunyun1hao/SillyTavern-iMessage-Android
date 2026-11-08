@@ -420,6 +420,18 @@ function renderList(list, index) {
     if (groups.length) {
         parts.push(section(t('Groups'), groups));
     }
+    // 按最近排序时直接平铺，不再按首字母分组，否则字母分组会把最近顺序重新打乱。
+    if (view.sort === 'recent') {
+        const people = shown.filter((item) => !item.group);
+        if (people.length) {
+            parts.push(section(t('最近'), people));
+        }
+        list.replaceChildren(...parts);
+        list.scrollTop = scroll;
+        index.replaceChildren();
+        index.hidden = true;
+        return;
+    }
     const letters = new Map();
     for (const item of shown.filter((x) => !x.group)) {
         const letter = letterOf(item.name);
