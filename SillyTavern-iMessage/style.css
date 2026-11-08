@@ -1,0 +1,20 @@
+/* iMessage theme
+   Every rule is scoped to body.imessage, so the extension's "Enable theme" switch turns the
+   whole look on and off; body.imsg-dark switches to the dark palette.
+   tokens.css comes first because everything uses it, mobile.css and the background setting last. */
+
+@import url("css/tokens.css");
+@import url("css/boot.css");
+@import url("css/shell.css");
+@import url("css/chat.css");
+@import url("css/split.css");
+@import url("css/compose.css");
+@import url("css/controls.css");
+@import url("css/forms.css");
+@import url("css/card.css");
+@import url("css/features.css");
+@import url("css/mobile.css");
+@import url("css/wallpaper.css");
+@import url("css/contacts.css");
+@import url("css/panes.css");
+@import url("css/customize.css");

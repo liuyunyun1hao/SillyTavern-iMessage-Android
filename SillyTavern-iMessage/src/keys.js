@@ -1,0 +1,59 @@
+// Mac-style shortcuts (Ctrl instead of ⌘ elsewhere): ⌘F/⌘K search, ⌥⌘N new message,
+// ⌃⌘S toggle the sidebar, ⌘, settings, Esc closes the open sheet. ST's own ↑ still edits the
+// last message.
+
+import { whenOn } from './power.js';
+import { closeDrawers, newMessage, toggleSidebar } from './shell.js';
+import { openSettings } from './settings.js';
+import { overlayOpen, within } from './dom.js';
+
+function isMac() {
+    return /Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent);
+}
+
+function focusSearch() {
+    document.body.classList.remove('imsg-m-chat');
+    const input = /** @type {HTMLInputElement} */ (document.querySelector('#imsg-sidebar .imsg-search input'));
+    input?.focus();
+    input?.select();
+}
+
+function onKeyDown(event) {
+    if (event.defaultPrevented) {
+        return;
+    }
+    const command = isMac() ? event.metaKey : event.ctrlKey;
+    const key = event.key.toLowerCase();
+
+    if (command && !event.shiftKey && !event.altKey && (key === 'f' || key === 'k')) {
+        event.preventDefault();
+        focusSearch();
+        return;
+    }
+    if (command && event.altKey && event.code === 'KeyN') {
+        event.preventDefault();
+        newMessage();
+        return;
+    }
+    // ⌃⌘S on a Mac, as in Messages; Ctrl+Shift+S elsewhere
+    if (event.code === 'KeyS' && (isMac() ? event.metaKey && event.ctrlKey : event.ctrlKey && event.shiftKey) && !event.altKey) {
+        event.preventDefault();
+        toggleSidebar();
+        return;
+    }
+    if (command && !event.altKey && key === ',') {
+        event.preventDefault();
+        openSettings();
+        return;
+    }
+    // Esc closes an open sheet, unless a dialog, menu or field is handling it
+    if (key === 'escape' && !overlayOpen()
+        && document.querySelector('#top-settings-holder .drawer-content.openDrawer')
+        && !within(event, '.edit_textarea, .select2-container')) {
+        closeDrawers();
+    }
+}
+
+export function initKeys() {
+    document.addEventListener('keydown', whenOn(onKeyDown));
+}

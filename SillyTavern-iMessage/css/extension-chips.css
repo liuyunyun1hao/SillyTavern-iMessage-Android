@@ -1,0 +1,71 @@
+/* Quick Replies stay one scrolling row, so they never make the message box grow, and Chat Top Bar
+   keeps its height. Shared by the Discord, iMessage, Yahoo Messenger and Yodayo themes; each copies this unchanged. */
+
+body:is(.discord-theme, .imessage, .yahoo-messenger, .yodayo-tavern) #qr--bar {
+    flex-wrap: nowrap;
+    /* centered while they fit, and every chip can still be scrolled to when they don't */
+    justify-content: safe center;
+    gap: 6px;
+    overflow-x: auto;
+    scrollbar-width: none;
+}
+
+body:is(.discord-theme, .imessage, .yahoo-messenger, .yodayo-tavern) #qr--bar::-webkit-scrollbar {
+    display: none;
+}
+
+body:is(.discord-theme, .imessage, .yahoo-messenger, .yodayo-tavern) #qr--bar .qr--buttons {
+    flex: none;
+    flex-wrap: nowrap;
+    width: auto;
+    max-width: none;
+}
+
+body:is(.discord-theme, .imessage, .yahoo-messenger, .yodayo-tavern) #qr--bar .qr--button {
+    flex: none;
+    white-space: nowrap;
+}
+
+body:is(.discord-theme, .imessage, .yahoo-messenger, .yodayo-tavern) #extensionTopBar {
+    flex: none;
+    flex-wrap: nowrap;
+    align-items: center;
+    width: auto;
+}
+
+body:is(.discord-theme, .imessage, .yahoo-messenger, .yodayo-tavern) #extensionTopBar #extensionTopBarChatName {
+    flex: 1 1 0;
+    min-width: 0;
+}
+
+body:is(.discord-theme, .imessage, .yahoo-messenger, .yodayo-tavern) #extensionTopBar #extensionTopBarSearchInput {
+    flex: 0 1 180px;
+    min-width: 60px;
+}
+
+/* Yodayo's floating back and settings buttons sit over the bar's two ends */
+body.yodayo-tavern #extensionTopBar {
+    padding-inline: 52px;
+}
+
+/* Quick Replies' popout button stays reachable at the row's end instead of lying over the chips */
+body:is(.discord-theme, .imessage, .yahoo-messenger, .yodayo-tavern) #qr--bar > #qr--popoutTrigger {
+    position: sticky;
+    right: 0;
+    top: auto;
+    order: 99;
+    flex: none;
+    z-index: 1;
+}
+
+/* World Info Drawer sets its screen to the full window width, which runs off the right of these themes' sheets */
+body.imessage.stwid--.stwid--nonDiscord #top-settings-holder #WorldInfo {
+    width: var(--imsg-panel);
+    height: calc(100dvh - 72px);
+}
+
+@media screen and (min-width: 1001px) {
+    body.yodayo-tavern.stwid--.stwid--nonDiscord #top-settings-holder #WorldInfo {
+        width: min(1200px, calc(100vw - 96px));
+    }
+}

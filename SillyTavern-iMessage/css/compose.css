@@ -1,0 +1,175 @@
+/* 屏蔽安卓底层的蓝色点击高亮 */
+body.imessage {
+    -webkit-tap-highlight-color: transparent !important;
+}
+
+/* 底部整体容器 */
+body.imessage #form_sheld {
+    padding: 8px 16px calc(16px + env(safe-area-inset-bottom, 0px)) !important;
+    background: transparent !important;
+    overflow: visible !important;
+}
+
+/* 干掉所有可能产生蓝框的边框和阴影 */
+body.imessage #send_form,
+body.imessage #send_form:focus,
+body.imessage #send_form:focus-within,
+body.imessage #send_form:active {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    outline: none !important;
+    overflow: visible !important;
+    display: flex !important; 
+    width: 100% !important;
+}
+
+/* ★ 核心：外层大胶囊，正灰底 */
+body.imessage #nonQRFormItems,
+body.imessage #nonQRFormItems:focus,
+body.imessage #nonQRFormItems:focus-within {
+    display: flex !important;
+    align-items: center !important;
+    width: 100% !important;
+    min-height: 38px !important; 
+    padding: 0 4px 0 4px !important; 
+    margin: 0 !important;
+    border: none !important; 
+    border-radius: 19px !important; 
+    background: #e6e6e6 !important; /* 正灰底色 */
+    box-sizing: border-box !important;
+    overflow: visible !important;
+    box-shadow: none !important;
+    position: relative !important;
+}
+
+/* ★ 终极强杀：干掉 // 拖拽手柄和所有残留的伪元素 */
+body.imessage #nonQRFormItems::after,
+body.imessage #nonQRFormItems::before,
+body.imessage #send_form::after,
+body.imessage #send_form::before {
+    display: none !important;
+    content: none !important;
+}
+
+/* 干掉原生的 resize 手柄伪元素 */
+body.imessage textarea::-webkit-resizer {
+    display: none !important;
+}
+
+/* 左侧加号圆圈 */
+/* 左侧加号圆圈：换成浅蓝灰色 */
+body.imessage #leftSendForm {
+    width: 30px !important;
+    height: 30px !important;
+    min-width: 30px !important;
+    border-radius: 50% !important;
+    background: #dee2e6 !important; /* ★ 这里换成浅蓝灰了 */
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    margin: 0 8px 0 4px !important;
+    flex-shrink: 0 !important;
+    position: relative !important;
+    transition: transform 0.1s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
+    box-shadow: none !important; /* 去掉了白圈的阴影，和发送键保持一致 */
+}
+body.imessage #leftSendForm:active { transform: scale(0.85) !important; }
+
+/* 隐藏多余的原生按钮，只留扩展菜单 */
+body.imessage #leftSendForm > div:not(#extensionsMenuButton) { display: none !important; }
+body.imessage #leftSendForm > #extensionsMenuButton {
+    width: 100% !important; height: 100% !important; opacity: 0 !important; padding: 0 !important; margin: 0 !important;
+}
+
+/* 画加号 */
+body.imessage #leftSendForm::after {
+    content: "" !important;
+    position: absolute !important; top: 50%; left: 50%; transform: translate(-50%, -50%) !important;
+    width: 16px; height: 16px; background-color: #555 !important;
+    -webkit-mask: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>') center / contain no-repeat !important;
+    mask: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>') center / contain no-repeat !important;
+    pointer-events: none !important;
+}
+
+/* ★ 中间输入框：完全透明，修复光标形状 */
+body.imessage #send_textarea,
+body.imessage #send_textarea:focus,
+body.imessage #send_textarea:active {
+    flex: 1 !important;
+    border: none !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    outline: none !important;
+    padding: 8px 0 8px 4px !important; /* ★ 左边留一点点 padding，修复括号残影 */
+    margin: 0 !important;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important; /* 字体防变异 */
+    font-size: 16px !important;
+    line-height: 20px !important;
+    color: var(--imsg-fg) !important;
+    height: auto !important;
+    min-height: 36px !important;
+    max-height: 100px !important; 
+    overflow-y: auto !important;
+    -webkit-appearance: none !important;
+    caret-color: #7c739f !important; /* ★ 光标换成紫色，更符合主题，且形状正常 */
+    resize: none !important; /* 禁止拖拽 */
+}
+
+body.imessage #send_textarea::-webkit-scrollbar { display: none !important; }
+
+body.imessage #send_textarea::placeholder {
+    color: #8e8e93 !important;
+}
+
+/* ★ 右侧发送键：浅蓝灰底 */
+body.imessage #rightSendForm {
+    width: 34px !important;
+    min-width: 34px !important;
+    height: 34px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    margin: 0 0 0 4px !important;
+    padding: 0 !important;
+    flex-shrink: 0 !important; 
+    transition: transform 0.1s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
+    z-index: 10 !important;
+}
+body.imessage #rightSendForm:active { transform: scale(0.85) !important; }
+
+body.imessage #rightSendForm > div:not(#send_but):not(#mes_stop) { display: none !important; }
+
+/* ★ 发送键图标：浅蓝灰底，深灰箭头 */
+body.imessage #rightSendForm > #send_but,
+body.imessage #rightSendForm > #send_but.displayNone {
+    width: 30px !important; height: 30px !important; min-width: 30px !important;
+    border-radius: 50% !important;
+    background: #dee2e6 !important; /* 你要的浅蓝灰 */
+    color: #555555 !important; /* 箭头深灰 */
+    display: flex !important; align-items: center !important; justify-content: center !important;
+    border: none !important; box-shadow: none !important; padding: 0 !important; margin: 0 !important;
+    --imsg-glyph: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5.5M6 11.2l6-6 6 6"/></svg>') !important;
+    --imsg-glyph-size: 16px !important;
+}
+
+body.imessage #rightSendForm > #send_but::before {
+    content: '' !important; display: block !important; width: var(--imsg-glyph-size) !important; height: var(--imsg-glyph-size) !important;
+    background-color: currentColor !important;
+    -webkit-mask: var(--imsg-glyph) center / contain no-repeat !important;
+    mask: var(--imsg-glyph) center / contain no-repeat !important;
+}
+body.imessage #send_but i { display: none !important; }
+
+/* 隐藏全网页滚动条 */
+body.imessage ::-webkit-scrollbar,
+body.imessage #chat::-webkit-scrollbar,
+body.imessage .imsg-cn-scroll::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+}
+body.imessage, body.imessage #chat, body.imessage .imsg-cn-scroll {
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
+}

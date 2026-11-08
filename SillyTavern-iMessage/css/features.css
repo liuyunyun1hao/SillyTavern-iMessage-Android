@@ -1,0 +1,152 @@
+import { events, isOn, onStart } from './power.js';
+import { context, glyph, nearBottom, t, within } from './dom.js';
+
+const JUMP_ID = 'imsg-jump';
+const TOOLTIP_ID = 'imsg-tooltip';
+const TOOLTIP_DELAY_MS = 600;
+const JUMP_DISTANCE = 400;
+
+export function decorate(mes, message) {
+    const block = mes.querySelector(':scope > .mes_block');
+    if (!block) return;
+    if (message?.extra?.imsg_edited) {
+        mes.dataset.imsgEdited = t('Edited 已编辑');
+    } else {
+        delete mes.dataset.imsgEdited;
+    }
+    const bar = mes.querySelector('.mes_buttons');
+    if (bar) {
+        let time = bar.querySelector(':scope > .imsg-bar-time');
+        const date = message?.send_date ? context().timestampToMoment(message.send_date) : null;
+        const label = date?.isValid() ? date.format('LT') : '';
+        if (label && !time) {
+            time = document.createElement('span');
+            time.className = 'imsg-bar-time';
+            bar.prepend(time);
+        }
+        if (time) time.textContent = label;
+    }
+}
+
+function initJump() {
+    const chatElement = document.getElementById('chat');
+    const sheld = document.getElementById('sheld');
+    if (!chatElement || !sheld) return;
+    const jump = document.createElement('button');
+    jump.type = 'button';
+    jump.id = JUMP_ID;
+    jump.hidden = true;
+    jump.title = t('Jump to Latest 跳到最新');
+    jump.append(glyph('chevron-left'));
+    jump.addEventListener('click', () => {
+        chatElement.scrollTo({ top: chatElement.scrollHeight, behavior: 'smooth' });
+    });
+    onStart(() => sheld.append(jump));
+    const update = () => {
+        const away = !nearBottom(chatElement, JUMP_DISTANCE);
+        jump.hidden = !away;
+        if (!away) jump.classList.remove('imsg-jump-new');
+    };
+    chatElement.addEventListener('scroll', update, { passive: true });
+    const eventSource = events();
+    eventSource.on(context().eventTypes.MESSAGE_RECEIVED, () => {
+        if (!nearBottom(chatElement, JUMP_DISTANCE)) jump.classList.add('imsg-jump-new');
+    });
+    eventSource.on(context().eventTypes.CHAT_CHANGED, () => {
+        jump.classList.remove('imsg-jump-new');
+        setTimeout(update, 300);
+    });
+}
+
+function initTooltips() {
+    let timer = 0;
+    let target = null;
+    const tip = document.createElement('div');
+    tip.id = TOOLTIP_ID;
+    tip.hidden = true;
+    onStart(() => document.body.append(tip));
+
+    const hide = () => {
+        clearTimeout(timer);
+        tip.hidden = true;
+        if (target?.dataset.imsgTitle !== undefined) {
+            target.setAttribute('title', target.dataset.imsgTitle);
+            delete target.dataset.imsgTitle;
+        }
+        target = null;
+    };
+    document.addEventListener('pointerover', (event) => {
+        if (!isOn() || event.pointerType === 'touch') return;
+        const element = event.target.closest?.('[title]');
+        if (!element || element === target || !element.getAttribute('title')?.trim() || element.matches('input, textarea, select')) return;
+        hide();
+        target = element;
+        element.dataset.imsgTitle = element.getAttribute('title');
+        element.removeAttribute('title');
+        timer = setTimeout(() => {
+            if (!target?.isConnected) return;
+            tip.textContent = target.dataset.imsgTitle;
+            tip.hidden = false;
+            const box = target.getBoundingClientRect();
+            tip.style.left = `${Math.max(6, Math.min(window.innerWidth - tip.offsetWidth - 6, box.left + box.width / 2 - tip.offsetWidth / 2))}px`;
+            tip.style.top = `${box.bottom + 6}px`;
+        }, TOOLTIP_DELAY_MS);
+    });
+    document.addEventListener('pointerout', (event) => {
+        if (target && !target.contains(event.relatedTarget)) hide();
+    });
+}
+
+export function initFeatures() {
+    const { eventTypes } = context();
+    const eventSource = events();
+
+    // ★ 终极拦截：针对套壳 App 的触摸和点击双重监听，阻止任何默认穿透
+    const handleBarClick = (event) => {
+        if (!isOn()) return;
+
+        const target = event.target;
+        // 1. 排除点击了按钮或输入框本身
+        if (target.closest('.mes_buttons') || target.closest('.mes_edit_buttons') || target.closest('.edit_textarea') || target.closest('textarea') || target.closest('#form_sheld') || target.closest('a')) {
+            return;
+        }
+
+        const mes = target.closest('#chat > .mes');
+        if (mes) {
+            // 2. 点到了消息气泡：阻止触摸抬起和点击的默认事件
+            event.preventDefault();
+            event.stopPropagation();
+            
+            // 先清空其他的
+            document.querySelectorAll('#chat > .mes.imsg-bar-open').forEach(el => {
+                if (el !== mes) el.classList.remove('imsg-bar-open');
+            });
+            // 切换当前的
+            mes.classList.toggle('imsg-bar-open');
+            return;
+        }
+
+        // 3. 点到了屏幕空白处，关闭所有展开
+        document.querySelectorAll('#chat > .mes.imsg-bar-open').forEach(el => el.classList.remove('imsg-bar-open'));
+    };
+
+    // 同时监听 touchstart 和 click，并让它们互斥
+    document.addEventListener('touchstart', (e) => {
+        if (isOn() && e.target.closest('.mes_block')) {
+            e.stopPropagation(); // 阻止原生代码的触摸监听
+        }
+    }, { passive: false });
+
+    document.addEventListener('click', handleBarClick, { capture: true });
+
+    eventSource.on(eventTypes.MESSAGE_EDITED, async (messageId) => {
+        const message = context().chat[Number(messageId)];
+        if (!message || message.is_system) return;
+        message.extra ??= {};
+        message.extra.imsg_edited = true;
+        await context().saveChat();
+    });
+
+    initJump();
+    initTooltips();
+}
