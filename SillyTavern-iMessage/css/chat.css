@@ -1311,3 +1311,26 @@ body.imessage #chat .mes :is(.mes_text, .imsg-part) {
 body.imessage #chat .mes .mes_block {
     max-width: 100% !important;
 }
+/* 消息不足一屏时贴着输入框往上排，而不是顶在屏幕最上面（iMessage 的对话从底部开始） */
+body.imessage #chat > .mes:first-child {
+    margin-top: auto;
+}
+
+/* 搜索框聚焦时不要浏览器默认的蓝色描边 */
+body.imessage .imsg-search input:focus,
+body.imessage .imsg-search input:focus-visible {
+    outline: none;
+}
+
+/* 宽气泡是手机上的设计；桌面窗口很宽时限制行长，避免一行上百字 */
+@media screen and (min-width: 1001px) {
+    body.imessage #chat .mes .mes_block {
+        max-width: min(100%, 620px) !important;
+    }
+}
+
+/* 操作条自己带时间，悬停/点按时让上方的时间分隔线让位，避免两层时间叠在一起 */
+body.imessage #chat .mes:hover > .imsg-stamp,
+body.imessage #chat .mes:focus-within > .imsg-stamp {
+    opacity: 0;
+}

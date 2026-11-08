@@ -766,3 +766,71 @@ body.imessage :is(#rm_button_characters, #rm_button_back, #rm_button_back_from_g
     font-family: var(--imsg-font);
     font-weight: 400;
 }
+
+/* Selection mode: the phone's Edit button turns conversations into pickable rows */
+body.imessage .imsg-check {
+    display: none;
+    flex: none;
+    width: 20px;
+    height: 20px;
+    align-items: center;
+    justify-content: center;
+}
+
+body.imessage #imsg-sidebar.imsg-editing .imsg-check {
+    display: flex;
+}
+
+body.imessage .imsg-check::after {
+    content: '';
+    width: 20px;
+    height: 20px;
+    box-sizing: border-box;
+    border: 1.5px solid var(--imsg-fg-3);
+    border-radius: 50%;
+}
+
+body.imessage .imsg-row.imsg-picked .imsg-check::after {
+    content: '✓';
+    background: var(--imsg-blue);
+    border-color: var(--imsg-blue);
+    color: #ffffff;
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 17px;
+    text-align: center;
+}
+
+body.imessage #imsg-sidebar.imsg-editing .imsg-row {
+    padding-left: 8px;
+}
+
+body.imessage .imsg-edit-bar {
+    display: flex;
+    flex: none;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 8px 16px calc(8px + env(safe-area-inset-bottom));
+    background: var(--imsg-toolbar);
+    border-top: 1px solid var(--imsg-line);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+}
+
+body.imessage .imsg-edit-bar[hidden] {
+    display: none;
+}
+
+body.imessage .imsg-edit-all {
+    color: var(--imsg-blue);
+}
+
+body.imessage .imsg-edit-delete {
+    color: #ff3b30;
+    font-weight: 600;
+}
+
+body.imessage .imsg-edit-delete:disabled {
+    opacity: 0.4;
+}

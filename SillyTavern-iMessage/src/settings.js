@@ -108,7 +108,7 @@ const SETTINGS = {
             nodes: () => [select('[name="ChatMessageHandlingToggles"]')],
         },
         {
-            key: 'streaming', title: 'Streaming & Sound 流式输出与声音', symbol: 'speaker', color: PINK, group: 'Chat 聊天',
+            key: 'streaming', title: '流式输出与声音', symbol: 'speaker', color: PINK, group: 'Chat 聊天',
             nodes: () => [byId('smooth_streaming_control'), byId('smooth_streaming_no_think_control'), byId('smooth_streaming_speed_control'), labelOf('stream_fade_in'), labelOf('play_message_sound'), labelOf('play_sound_unfocused')],
         },
         {

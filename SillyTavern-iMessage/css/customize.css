@@ -11,7 +11,7 @@
     width: 340px;
     box-sizing: border-box;
     border-left: 0.5px solid var(--imsg-line-strong);
-    background: color-mix(in srgb, var(--imsg-sheet) 92%, transparent);
+    background: var(--imsg-sheet);
     -webkit-backdrop-filter: blur(30px) saturate(1.8);
     backdrop-filter: blur(30px) saturate(1.8);
     color: var(--imsg-fg);

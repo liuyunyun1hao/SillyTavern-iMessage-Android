@@ -1,109 +1,109 @@
 <div class="imsg-settings">
     <div class="inline-drawer">
         <div class="inline-drawer-toggle inline-drawer-header">
-            <b data-i18n="iMessage Theme">iMessage Theme</b>
+            <b>iMessage Theme</b>
             <div class="inline-drawer-icon fa-solid fa-circle-chevron-down down"></div>
         </div>
         <div class="inline-drawer-content">
             <label class="checkbox_label" for="imsg_enabled">
                 <input id="imsg_enabled" type="checkbox" />
-                <span data-i18n="Enable theme">Enable theme</span>
+                <span>启用主题</span>
             </label>
-            <small class="imsg-note" data-i18n="Turning it on switches off any other theme extension.">Turning it on switches off any other theme extension.</small>
+            <small class="imsg-note">开启后会关闭其他主题扩展。</small>
 
             <label class="checkbox_label" for="imsg_pause_user_theme">
                 <input id="imsg_pause_user_theme" type="checkbox" />
-                <span data-i18n="Pause my Custom CSS and UI theme">Pause my Custom CSS and UI theme</span>
+                <span>暂停我的自定义 CSS 与界面主题</span>
             </label>
-            <small class="imsg-note" data-i18n="While the theme is on, your Custom CSS and UI theme colors are set aside, untouched, and come back when it's off.">While the theme is on, your Custom CSS and UI theme colors are set aside, untouched, and come back when it's off.</small>
+            <small class="imsg-note">主题开启期间，你的自定义 CSS 与界面主题配色会暂时搁置、不做改动，关闭后恢复。</small>
 
             <div class="imsg-setting-row">
-                <label for="imsg_appearance" data-i18n="Appearance">Appearance</label>
+                <label for="imsg_appearance">外观</label>
                 <select id="imsg_appearance" class="text_pole">
-                    <option value="system" data-i18n="Auto (follow the system)">Auto (follow the system)</option>
-                    <option value="light" data-i18n="Light">Light</option>
-                    <option value="dark" data-i18n="Dark">Dark</option>
+                    <option value="system">跟随系统</option>
+                    <option value="light">浅色</option>
+                    <option value="dark">深色</option>
                 </select>
             </div>
 
-            <div id="imsg_customize" class="menu_button" role="button" tabindex="0" data-i18n="Customize…">Customize…</div>
-            <small class="imsg-note" data-i18n="Colors, text, bubbles (blur, opacity, acrylic), spacing, what's shown, motion and your own CSS, with a live preview.">Colors, text, bubbles (blur, opacity, acrylic), spacing, what's shown, motion and your own CSS, with a live preview.</small>
+            <div id="imsg_customize" class="menu_button" role="button" tabindex="0">自定义…</div>
+            <small class="imsg-note">颜色、文字、气泡（模糊、透明度、亚克力）、间距、显示内容、动效以及你自己的 CSS，支持实时预览。</small>
 
             <label class="checkbox_label" for="imsg_window_buttons">
                 <input id="imsg_window_buttons" type="checkbox" />
-                <span data-i18n="Show the window buttons (close, minimize, full screen)">Show the window buttons (close, minimize, full screen)</span>
+                <span>显示窗口按钮（关闭、最小化、全屏）</span>
             </label>
 
             <label class="checkbox_label" for="imsg_receipts">
                 <input id="imsg_receipts" type="checkbox" />
-                <span data-i18n="Show Delivered and Read">Show Delivered and Read</span>
+                <span>显示“已送达”和“已读”</span>
             </label>
 
             <label class="checkbox_label" for="imsg_typing">
                 <input id="imsg_typing" type="checkbox" />
-                <span data-i18n="Show the typing bubble while a reply is written">Show the typing bubble while a reply is written</span>
+                <span>回复生成时显示输入中的气泡</span>
             </label>
 
             <label class="checkbox_label" for="imsg_split">
                 <input id="imsg_split" type="checkbox" />
-                <span data-i18n="Split long replies into short messages">Split long replies into short messages</span>
+                <span>将长回复拆成多条短消息</span>
             </label>
 
             <label class="checkbox_label" for="imsg_image_links">
                 <input id="imsg_image_links" type="checkbox" />
-                <span data-i18n="Show image links as pictures">Show image links as pictures</span>
+                <span>将图片链接显示为图片</span>
             </label>
-            <small class="imsg-note" data-i18n="Pictures from links in messages load even when Forbid External Media is on.">Pictures from links in messages load even when Forbid External Media is on.</small>
+            <small class="imsg-note">即使开启“禁止外部媒体”，消息中的图片链接仍会加载。</small>
 
             <div class="imsg-setting-row">
-                <label for="imsg_recent_max" data-i18n="Conversations in the list">Conversations in the list</label>
+                <label for="imsg_recent_max">列表中的对话数量</label>
                 <input id="imsg_recent_max" class="text_pole" type="number" min="5" max="500" step="5" />
             </div>
 
             <label class="checkbox_label" for="imsg_wallpaper">
                 <input id="imsg_wallpaper" type="checkbox" />
-                <span data-i18n="Show a background behind the conversation">Show a background behind the conversation</span>
+                <span>在对话后方显示背景</span>
             </label>
 
             <div id="imsg_wallpaper_options" class="imsg-wallpaper-options">
                 <div class="imsg-setting-row">
-                    <label for="imsg_wallpaper_blur" data-i18n="Blur">Blur</label>
+                    <label for="imsg_wallpaper_blur">模糊</label>
                     <input id="imsg_wallpaper_blur" type="range" min="0" max="40" step="1" />
                     <span id="imsg_wallpaper_blur_value" class="imsg-value"></span>
                 </div>
                 <div class="imsg-setting-row">
-                    <label for="imsg_wallpaper_dim" data-i18n="Fade">Fade</label>
+                    <label for="imsg_wallpaper_dim">淡化</label>
                     <input id="imsg_wallpaper_dim" type="range" min="0" max="90" step="5" />
                     <span id="imsg_wallpaper_dim_value" class="imsg-value"></span>
                 </div>
-                <div id="imsg_wallpaper_pick" class="menu_button" role="button" tabindex="0" data-i18n="Choose Background…">Choose Background…</div>
+                <div id="imsg_wallpaper_pick" class="menu_button" role="button" tabindex="0">选择背景…</div>
             </div>
 
             <label class="checkbox_label" for="imsg_sounds">
                 <input id="imsg_sounds" type="checkbox" />
-                <span data-i18n="Play sounds when you send and when a reply arrives">Play sounds when you send and when a reply arrives</span>
+                <span>发送消息和收到回复时播放提示音</span>
             </label>
 
             <div id="imsg_sound_options" class="imsg-wallpaper-options">
                 <div class="imsg-setting-row">
-                    <label for="imsg_sound_volume" data-i18n="Volume">Volume</label>
+                    <label for="imsg_sound_volume">音量</label>
                     <input id="imsg_sound_volume" type="range" min="0" max="100" step="5" />
                     <span id="imsg_sound_volume_value" class="imsg-value"></span>
                 </div>
                 <div class="imsg-setting-row">
-                    <div id="imsg_sound_send" class="menu_button" role="button" tabindex="0" data-i18n="Play Send">Play Send</div>
-                    <div id="imsg_sound_receive" class="menu_button" role="button" tabindex="0" data-i18n="Play Reply">Play Reply</div>
+                    <div id="imsg_sound_send" class="menu_button" role="button" tabindex="0">播放发送音</div>
+                    <div id="imsg_sound_receive" class="menu_button" role="button" tabindex="0">播放回复音</div>
                 </div>
             </div>
 
             <label class="checkbox_label" for="imsg_notify">
                 <input id="imsg_notify" type="checkbox" />
-                <span data-i18n="Notify me of replies while the tab is in the background">Notify me of replies while the tab is in the background</span>
+                <span>标签页在后台时通知我新回复</span>
             </label>
 
-            <small class="imsg-note" data-i18n="Shortcuts: ⌘F search, ⌥⌘N new message, ⌃⌘S hide or show the list (Ctrl+Shift+S elsewhere), ⌘, settings, Esc closes a sheet, ↑ edits your last message (Ctrl in place of ⌘ on Windows and Linux).">Shortcuts: ⌘F search, ⌥⌘N new message, ⌃⌘S hide or show the list (Ctrl+Shift+S elsewhere), ⌘, settings, Esc closes a sheet, ↑ edits your last message (Ctrl in place of ⌘ on Windows and Linux).</small>
+            <small class="imsg-note">快捷键：⌘F 搜索，⌥⌘N 新信息，⌃⌘S 隐藏或显示列表（其他平台为 Ctrl+Shift+S），⌘, 设置，Esc 关闭面板，↑ 编辑上一条消息（Windows/Linux 用 Ctrl 代替 ⌘）。</small>
 
-            <small class="imsg-note">Turn off other UI themes (such as Microsoft Teams, Moonlit Echoes or Yodayo Tavern) while this one is on. The background is hidden unless you turn it on above; pick it in Backgrounds.</small>
+            <small class="imsg-note">使用本主题时请关闭其他界面主题（如 Microsoft Teams、Moonlit Echoes 或 Yodayo Tavern）。背景默认隐藏，需在上方开启，并在“背景”中选择。</small>
         </div>
     </div>
 </div>

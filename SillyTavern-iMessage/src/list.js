@@ -8,7 +8,7 @@ import { monogramizeAll } from './monograms.js';
 import { buildGroupAvatar, buildSidebarToolbar, clickOption, toggleMenu } from './shell.js';
 import { getSettings } from './config.js';
 import { events, onStart, whenOn } from './power.js';
-import { glyph, setPicture, t } from './dom.js';
+import { button, glyph, setPicture, t } from './dom.js';
 
 const SIDEBAR_ID = 'imsg-sidebar';
 /** The app's own pinned chats, kept in account storage by welcome-screen.js */
@@ -20,6 +20,14 @@ let filterText = '';
 let requestId = 0;
 let refreshTimer = 0;
 let onOpen = () => {};
+/** Selection mode (the phone's Edit button): tap rows to pick conversations, then delete them. */
+let editing = false;
+const picked = new Set();
+let editBar = null;
+
+// Registered once: the theme can be turned off and on without reloading the page, and the
+// sidebar is rebuilt each time, so this must not live inside createSidebar().
+window.addEventListener('imsg-edit-toggle', () => setEditing(!editing));
 
 function getPinState() {
     try {
@@ -145,7 +153,10 @@ function buildRow(entry) {
     typing.append(document.createElement('span'), document.createElement('span'), document.createElement('span'));
     text.append(top, preview, typing);
 
-    row.append(buildAvatar(entry, ROW_AVATAR), text);
+    const check = document.createElement('span');
+    check.className = 'imsg-check';
+    check.setAttribute('aria-hidden', 'true');
+    row.append(check, buildAvatar(entry, ROW_AVATAR), text);
     return row;
 }
 
@@ -175,8 +186,8 @@ function render() {
         : entries;
 
     const parts = [];
-    // Messages drops pins into the list while searching
-    const pinned = needle ? [] : visible.filter(entry => entry.pinned);
+    // Messages drops pins into the list while searching; selection mode lists everyone as rows
+    const pinned = needle || editing ? [] : visible.filter(entry => entry.pinned);
     if (pinned.length) {
         const pins = document.createElement('div');
         pins.className = 'imsg-pins';
@@ -186,7 +197,7 @@ function render() {
     }
     const rows = document.createElement('div');
     rows.className = 'imsg-rows';
-    rows.append(...visible.filter(entry => needle || !entry.pinned).map(buildRow));
+    rows.append(...visible.filter(entry => needle || editing || !entry.pinned).map(buildRow));
     parts.push(rows);
 
     if (!visible.length) {
@@ -196,6 +207,11 @@ function render() {
         parts.push(empty);
     }
     body.replaceChildren(...parts);
+    if (editing) {
+        for (const item of body.querySelectorAll('[data-key]')) {
+            item.classList.toggle('imsg-picked', picked.has(item.dataset.key));
+        }
+    }
     markCurrent();
     monogramizeAll(body, '.imsg-avatar > img', img => entries.find(x => x.key === img.closest('[data-key]')?.dataset.key)?.name ?? '');
 }
@@ -298,15 +314,9 @@ function onePerContact(list) {
     return [...byContact.values()].sort((a, b) => b.lastMes - a.lastMes);
 }
 
-/** Deletes a conversation after asking, like Messages' Delete Conversation. */
-async function deleteEntry(entry) {
+/** Deletes one conversation without asking. */
+async function removeEntry(entry) {
     const context = SillyTavern.getContext();
-    const confirmed = await context.callGenericPopup(
-        `<h3>${t('Delete this conversation?')}</h3><p>${t('This conversation will be deleted. This can\'t be undone.')}</p>`,
-        context.POPUP_TYPE.CONFIRM, '', { okButton: t('Delete'), cancelButton: t('Cancel') });
-    if (!confirmed) {
-        return;
-    }
     try {
         if (isCurrent(entry)) {
             await context.executeSlashCommandsWithOptions('/closechat');
@@ -321,7 +331,108 @@ async function deleteEntry(entry) {
         console.error('[iMessage] Could not delete the conversation', error);
         toastr.error(t('Could not delete that conversation. See the console for details.'));
     }
+}
+
+/** Deletes a conversation after asking, like Messages' Delete Conversation. */
+async function deleteEntry(entry) {
+    const context = SillyTavern.getContext();
+    const confirmed = await context.callGenericPopup(
+        `<h3>${t('Delete this conversation?')}</h3><p>${t('This conversation will be deleted. This can\'t be undone.')}</p>`,
+        context.POPUP_TYPE.CONFIRM, '', { okButton: t('Delete'), cancelButton: t('Cancel') });
+    if (!confirmed) {
+        return;
+    }
+    await removeEntry(entry);
     scheduleRefresh(200);
+}
+
+/** Leaves or enters the list's selection mode. */
+function setEditing(on) {
+    editing = on;
+    picked.clear();
+    const sidebar = document.getElementById(SIDEBAR_ID);
+    sidebar?.classList.toggle('imsg-editing', on);
+    if (editBar) {
+        editBar.hidden = !on;
+    }
+    const edit = sidebar?.querySelector('.imsg-edit');
+    if (edit) {
+        edit.textContent = on ? t('Done') : t('Edit');
+    }
+    // Searching while picking could hide a selected row and delete more than the list shows.
+    const search = sidebar?.querySelector('.imsg-search input');
+    if (search) {
+        search.disabled = on;
+        if (on) {
+            search.value = '';
+            filterText = '';
+        }
+    }
+    render();
+    updateEditBar();
+}
+
+function togglePick(key) {
+    if (picked.has(key)) {
+        picked.delete(key);
+    } else {
+        picked.add(key);
+    }
+    const sidebar = document.getElementById(SIDEBAR_ID);
+    for (const item of sidebar?.querySelectorAll(`[data-key="${CSS.escape(key)}"]`) ?? []) {
+        item.classList.toggle('imsg-picked', picked.has(key));
+    }
+    updateEditBar();
+}
+
+function updateEditBar() {
+    if (!editBar) {
+        return;
+    }
+    const all = editBar.querySelector('.imsg-edit-all');
+    const remove = editBar.querySelector('.imsg-edit-delete');
+    const every = entries.length > 0 && picked.size === entries.length;
+    if (all) {
+        all.textContent = every ? '取消全选' : '全选';
+    }
+    if (remove) {
+        remove.disabled = picked.size === 0;
+        remove.textContent = picked.size ? `删除 (${picked.size})` : '删除';
+    }
+}
+
+function toggleAll() {
+    if (picked.size === entries.length) {
+        picked.clear();
+    } else {
+        for (const entry of entries) {
+            picked.add(entry.key);
+        }
+    }
+    const sidebar = document.getElementById(SIDEBAR_ID);
+    for (const item of sidebar?.querySelectorAll('[data-key]') ?? []) {
+        item.classList.toggle('imsg-picked', picked.has(item.dataset.key));
+    }
+    updateEditBar();
+}
+
+async function deletePicked() {
+    const chosen = entries.filter(entry => picked.has(entry.key));
+    if (!chosen.length) {
+        return;
+    }
+    const context = SillyTavern.getContext();
+    const confirmed = await context.callGenericPopup(
+        `<h3>${t('Delete these conversations?')}</h3><p>${chosen.length} 个对话将被删除，此操作无法撤销。</p>`,
+        context.POPUP_TYPE.CONFIRM, '', { okButton: t('Delete'), cancelButton: t('Cancel') });
+    if (!confirmed) {
+        return;
+    }
+    setEditing(false);
+    for (const entry of chosen) {
+        await removeEntry(entry);
+    }
+    scheduleRefresh(150);
 }
 
 /** Refreshes after a pause, so a burst of events costs one request. */
@@ -445,10 +556,18 @@ function createSidebar() {
         }
         const entry = entryOf(event.target);
         if (entry) {
-            openEntry(entry);
+            if (editing) {
+                event.preventDefault();
+                togglePick(entry.key);
+            } else {
+                openEntry(entry);
+            }
         }
     });
     body.addEventListener('contextmenu', (event) => {
+        if (editing) {
+            return;
+        }
         const entry = entryOf(event.target);
         if (entry) {
             event.preventDefault();
@@ -459,12 +578,19 @@ function createSidebar() {
         const entry = entryOf(event.target);
         if (entry && (event.key === 'Enter' || event.key === ' ')) {
             event.preventDefault();
-            openEntry(entry);
+            if (editing) {
+                togglePick(entry.key);
+            } else {
+                openEntry(entry);
+            }
         }
     });
     // a long press on a phone opens the same menu
     let pressTimer = 0;
     body.addEventListener('touchstart', (event) => {
+        if (editing) {
+            return;
+        }
         const entry = entryOf(event.target);
         if (!entry) {
             return;
@@ -480,7 +606,15 @@ function createSidebar() {
         body.addEventListener(type, () => clearTimeout(pressTimer), { passive: true });
     }
 
-    sidebar.append(buildSidebarToolbar(), title, search, body);
+    editBar = document.createElement('div');
+    editBar.className = 'imsg-edit-bar';
+    editBar.hidden = true;
+    const all = button('imsg-text-button imsg-edit-all', '全选', toggleAll);
+    const remove = button('imsg-text-button imsg-edit-delete', '删除', deletePicked);
+    remove.disabled = true;
+    editBar.append(all, remove);
+
+    sidebar.append(buildSidebarToolbar(), title, search, body, editBar);
     document.body.append(sidebar);
     return sidebar;
 }

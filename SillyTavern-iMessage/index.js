@@ -2,7 +2,7 @@
 // modules in src/ build the Messages window and its native panels while the theme is on.
 
 import { MODULE_NAME, defaultSettings, getSettings, isDark, onSystemAppearanceChange, saveSettings } from './src/config.js';
-import { isPhone } from './src/dom.js';
+import { isPhone, watchNativeLabels } from './src/dom.js';
 import { renderPanel, setSetting, showSetting } from './src/panel.js';
 import { events, isOn, startTheme, stopTheme } from './src/power.js';
 import { registerTheme, reloadPage } from './src/shared/theme-exclusive.js';
@@ -125,6 +125,7 @@ async function init() {
         isDark: () => document.body.classList.contains('imsg-dark'),
         customize: () => openCustomize(),
     });
+    watchNativeLabels();
     const listLoaded = initList({ opened: showChatOnPhone });
     initSplit();
     initMessages();

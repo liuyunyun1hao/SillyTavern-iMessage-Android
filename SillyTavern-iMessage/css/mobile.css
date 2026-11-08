@@ -106,14 +106,6 @@
         font-size: 15px;
         line-height: 20px;
     }
-    body.imessage .imsg-row-time::after {
-        content: '';
-        width: 8px;
-        height: 13px;
-        background: var(--imsg-fg-3);
-        -webkit-mask: var(--imsg-sym-chevron-right) center / contain no-repeat;
-        mask: var(--imsg-sym-chevron-right) center / contain no-repeat;
-    }
     body.imessage .imsg-row-preview { font-size: 15px; line-height: 20px; }
 
     body.imessage #sheld {

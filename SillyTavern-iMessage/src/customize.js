@@ -42,7 +42,7 @@ const PRESET_KEYS = [
 const PRESETS = [
     {
         name: 'classic',
-        label: '经典蓝 Classic',
+        label: '经典蓝',
         swatch: ['#0a84ff', '#e6e6e6'],
         tokens: {},
         settings: {},
@@ -50,7 +50,7 @@ const PRESETS = [
     },
     {
         name: 'blush',
-        label: '柔粉 Blush',
+        label: '柔粉',
         swatch: ['#f7c6d4', '#f2e6e9'],
         tokens: {
             '--imsg-bubble-out': '#f7c6d4',
@@ -66,7 +66,7 @@ const PRESETS = [
     },
     {
         name: 'sky',
-        label: '天蓝 Sky',
+        label: '天蓝',
         swatch: ['#8fd3f4', '#ffffff'],
         tokens: {
             '--imsg-bubble-out': '#8fd3f4',
@@ -82,7 +82,7 @@ const PRESETS = [
     },
     {
         name: 'night',
-        label: '夜航 Night',
+        label: '夜航',
         swatch: ['#0a84ff', '#2a2a2e'],
         tokens: {
             '--imsg-bubble-out': '#0a84ff',
@@ -134,8 +134,8 @@ const SECTIONS = [
     {
         id: 'spacing', title: 'Spacing 间距', controls: [
             { token: '--imsg-mes-gap', label: 'Space between messages 消息间距', type: 'range', min: 0, max: 12, step: 1, unit: 'px' },
-            { token: '--imsg-bubble-pad-x', label: 'Bubble padding, sides 气泡水平内边距', type: 'range', min: 6, max: 24, step: 1, unit: 'px' },
-            { token: '--imsg-bubble-pad-y', label: 'Bubble padding, top 气泡垂直内边距', type: 'range', min: 3, max: 16, step: 1, unit: 'px' },
+            { token: '--imsg-bubble-pad-x', label: '气泡水平内边距', type: 'range', min: 6, max: 24, step: 1, unit: 'px' },
+            { token: '--imsg-bubble-pad-y', label: '气泡垂直内边距', type: 'range', min: 3, max: 16, step: 1, unit: 'px' },
             { token: '--imsg-room', label: 'Bubble width 气泡宽度', type: 'range', min: 50, max: 95, step: 1, unit: '%', invert: true, target: '#chat' },
             { token: '--imsg-side-w', label: 'Sidebar width 侧边栏宽度', type: 'range', min: 240, max: 480, step: 10, unit: 'px', wide: true },
         ],
@@ -186,7 +186,7 @@ const SECTIONS = [
     },
     {
         id: 'advanced', title: 'Advanced 高级', controls: [
-            { css: true, label: 'Your CSS 自定义CSS', type: 'css' },
+            { css: true, label: '自定义 CSS', type: 'css' },
         ],
     },
 ];
@@ -647,7 +647,14 @@ export function openCustomize() {
 
     const resetAll = element('button', 'menu_button imsg-cz-reset-all', t('Reset All 全部重置'));
     resetAll.type = 'button';
-    resetAll.addEventListener('click', () => {
+    resetAll.addEventListener('click', async () => {
+        const context = SillyTavern.getContext();
+        const confirmed = await context.callGenericPopup(
+            `<h3>${t('Reset all customization?')}</h3><p>${t("Colors, spacing, switches and your own CSS go back to the theme's defaults. This can't be undone.")}</p>`,
+            context.POPUP_TYPE.CONFIRM, '', { okButton: t('Reset'), cancelButton: t('Cancel') });
+        if (!confirmed) {
+            return;
+        }
         const custom = state();
         custom.tokens = {};
         custom.flags = {};

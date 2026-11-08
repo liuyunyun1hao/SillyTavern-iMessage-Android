@@ -1397,7 +1397,8 @@ export function openContacts({ pick = false, direct = false, key = null, edit = 
     document.body.append(root);
     document.addEventListener('keydown', onKey, true);
     render();
-    if (!edit) {
+    // 手机上打开通讯录不自动弹键盘，点搜索框才聚焦；桌面保留直接输入
+    if (!edit && !isPhone()) {
         search.focus({ preventScroll: true });
     }
 }

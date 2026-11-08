@@ -245,16 +245,35 @@ export function toggleMenu(anchor, items, point) {
     /** @type {HTMLElement} */ (menu.querySelector('.imsg-menu-item'))?.focus({ preventScroll: true });
 }
 
-function appMenuItems() {
+function appearanceItems() {
     const dark = shellOptions.isDark();
     return [
-    { label: 'New Message 新信息', run: newMessage },
-    {},
-    { label: 'Light Mode 浅色模式', checked: !dark, run: () => shellOptions.setAppearance('light') },
-    { label: 'Dark Mode 深色模式', checked: dark, run: () => shellOptions.setAppearance('dark') },
-    { label: 'Match System 跟随系统', run: () => shellOptions.setAppearance('system') },
-    { label: 'Customize… 自定义…', run: () => shellOptions.customize?.() },
-];
+        { label: 'Light Mode 浅色模式', checked: !dark, run: () => shellOptions.setAppearance('light') },
+        { label: 'Dark Mode 深色模式', checked: dark, run: () => shellOptions.setAppearance('dark') },
+        { label: 'Match System 跟随系统', run: () => shellOptions.setAppearance('system') },
+    ];
+}
+
+/** 手机上没有桌面版的应用菜单，从「我的 → 外观」打开同一组外观选项 */
+export function openAppearanceMenu(anchor) {
+    toggleMenu(anchor, appearanceItems());
+}
+
+function appMenuItems() {
+    return [
+        { label: 'New Message 新信息', run: newMessage },
+        { label: 'Contacts 联系人', run: () => openContacts() },
+        {},
+        ...appearanceItems(),
+        { label: 'Customize… 自定义…', run: () => shellOptions.customize?.() },
+        {},
+        // 桌面没有底部「我的」，常用入口放进应用菜单，避免窗口宽时功能不可达
+        { label: 'Backgrounds 背景', run: () => openBackgrounds() },
+        { label: 'World Info 世界书', run: () => openWorldInfo() },
+        { label: 'Extensions 扩展', run: () => openExtensions() },
+        { label: 'Response Settings 响应设置', run: () => openResponseSettings() },
+        { label: 'Settings 设置', run: () => openSettings() },
+    ];
 }
 
 export function buildSidebarToolbar() {
@@ -284,7 +303,10 @@ export function buildSidebarToolbar() {
         }),
     );
 
-    const edit = button('imsg-text-button imsg-edit', 'Edit 编辑', () => toggleMenu(edit, appMenuItems()));
+    // "Edit" is the list's selection mode (done in list.js); the ⋯ menu opens the app menu.
+    const edit = button('imsg-text-button imsg-edit', 'Edit 编辑', () => {
+        window.dispatchEvent(new CustomEvent('imsg-edit-toggle'));
+    });
     const menu = symbolButton('imsg-app-menu', 'More 更多', 'ellipsis-circle');
     menu.addEventListener('click', () => toggleMenu(menu, appMenuItems()));
     const compose = symbolButton('imsg-compose', 'New Message 新信息', 'compose');

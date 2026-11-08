@@ -31,6 +31,9 @@ body.imessage {
     --imsg-selected-quiet: rgba(0, 0, 0, 0.1);
     --imsg-menu: rgba(246, 246, 246, 0.96);
     --imsg-button: #ffffff;
+    --imsg-composer-field: #e6e6e6;
+    --imsg-composer-button: #dee2e6;
+    --imsg-composer-icon: #555555;
 
     /* Text */
     --imsg-fg: rgba(0, 0, 0, 0.88);
@@ -174,6 +177,9 @@ body.imessage.imsg-dark {
     --imsg-selected-quiet: rgba(255, 255, 255, 0.1);
     --imsg-menu: rgba(40, 40, 42, 0.97);
     --imsg-button: rgba(255, 255, 255, 0.2);
+    --imsg-composer-field: #262628;
+    --imsg-composer-button: rgba(255, 255, 255, 0.14);
+    --imsg-composer-icon: rgba(255, 255, 255, 0.85);
 
     --imsg-fg: rgba(255, 255, 255, 0.88);
     --imsg-fg-2: rgba(255, 255, 255, 0.55);

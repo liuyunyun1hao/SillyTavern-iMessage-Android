@@ -5,8 +5,10 @@
 import * as personas from '../../../../personas.js';
 import { button, element, glyph, setPicture, t } from './dom.js';
 import { openContacts, openMyCard } from './contacts.js';
+import { monogramize } from './monograms.js';
 import { openCustomize } from './customize.js';
-import { clickOption, openPanelById } from './shell.js';
+import { clickOption, openAppearanceMenu, openPanelById } from './shell.js';
+import { onStart, onStop } from './power.js';
 
 const BAR_ID = 'imsg-tabbar';
 const ME_ID = 'imsg-me';
@@ -87,6 +89,7 @@ function profile() {
             img.alt = '';
             setPicture(img, 'persona', userAvatar, 96);
             avatar.append(img);
+            monogramize(img, live.name1 || 'Me');
         } else {
             avatar.textContent = (live.name1 || 'Me').trim().charAt(0);
         }
@@ -95,6 +98,16 @@ function profile() {
     update();
     box.dataset.refresh = 'me';
     return box;
+}
+
+/** 手机端外观入口（浅色 / 深色 / 跟随系统），桌面端仍用标题栏菜单 */
+function appearanceRow() {
+    let node;
+    node = row({
+        icon: 'sparkle', color: '#0a84ff', label: 'Appearance 外观',
+        run: () => openAppearanceMenu(node),
+    });
+    return node;
 }
 
 function buildMe() {
@@ -123,6 +136,7 @@ function buildMe() {
 
     scroll.append(group([
         row({ icon: 'sliders', color: '#5856d6', label: 'Customize… 自定义…', run: () => openCustomize() }),
+        appearanceRow(),
         row({ icon: 'sliders', color: '#5856d6', label: 'Response Settings 响应设置', run: () => openPanel('ai-config-button') }),
         row({ icon: 'plug', color: '#34c759', label: 'Connections 连接', run: () => openPanel('sys-settings-button') }),
         row({ icon: 'textformat', color: '#ff9500', label: 'Formatting 格式化', run: () => openPanel('advanced-formatting-button') }),
@@ -159,6 +173,7 @@ function showMe() {
             img.alt = '';
             setPicture(img, 'persona', userAvatar, 96);
             avatar.append(img);
+            monogramize(img, live.name1 || 'Me');
         } else {
             avatar.textContent = (live.name1 || 'Me').trim().charAt(0);
         }
@@ -232,8 +247,14 @@ function watch() {
 }
 
 export function initTabbar() {
-    build();
+    // 只登记一次：开主题时建，关主题时拆，重新开启还能回来
     watch();
+    onStart(() => {
+        if (!document.getElementById(BAR_ID)) {
+            build();
+        }
+    });
+    onStop(removeTabbar);
 }
 
 export function removeTabbar() {

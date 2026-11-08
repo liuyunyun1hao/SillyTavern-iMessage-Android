@@ -33,12 +33,12 @@ export function formatStamp(time) {
         return { day: t('Yesterday'), time: time.format('LT') };
     }
     if (now.diff(time, 'days') < 7) {
-        return { day: time.format('dddd'), time: time.format('LT') };
+        return { day: time.format('ddd'), time: time.format('LT') };
     }
     if (time.isSame(now, 'year')) {
-        return { day: time.format('ddd, MMM D'), time: time.format('[at] LT') };
+        return { day: time.format('M月D日 ddd'), time: time.format('LT') };
     }
-    return { day: time.format('ll'), time: time.format('[at] LT') };
+    return { day: time.format('ll'), time: time.format('LT') };
 }
 
 /** Puts the time line at the top of a message, or takes it away. */

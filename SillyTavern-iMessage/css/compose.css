@@ -36,7 +36,7 @@ body.imessage #nonQRFormItems:focus-within {
     margin: 0 !important;
     border: none !important; 
     border-radius: 19px !important; 
-    background: #e6e6e6 !important; /* 正灰底色 */
+    background: var(--imsg-composer-field) !important;
     box-sizing: border-box !important;
     overflow: visible !important;
     box-shadow: none !important;
@@ -64,7 +64,7 @@ body.imessage #leftSendForm {
     height: 30px !important;
     min-width: 30px !important;
     border-radius: 50% !important;
-    background: #dee2e6 !important; /* ★ 这里换成浅蓝灰了 */
+    background: var(--imsg-composer-button) !important;
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
@@ -86,7 +86,7 @@ body.imessage #leftSendForm > #extensionsMenuButton {
 body.imessage #leftSendForm::after {
     content: "" !important;
     position: absolute !important; top: 50%; left: 50%; transform: translate(-50%, -50%) !important;
-    width: 16px; height: 16px; background-color: #555 !important;
+    width: 16px; height: 16px; background-color: var(--imsg-composer-icon) !important;
     -webkit-mask: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>') center / contain no-repeat !important;
     mask: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>') center / contain no-repeat !important;
     pointer-events: none !important;
@@ -145,8 +145,8 @@ body.imessage #rightSendForm > #send_but,
 body.imessage #rightSendForm > #send_but.displayNone {
     width: 30px !important; height: 30px !important; min-width: 30px !important;
     border-radius: 50% !important;
-    background: #dee2e6 !important; /* 你要的浅蓝灰 */
-    color: #555555 !important; /* 箭头深灰 */
+    background: var(--imsg-composer-button) !important;
+    color: var(--imsg-composer-icon) !important;
     display: flex !important; align-items: center !important; justify-content: center !important;
     border: none !important; box-shadow: none !important; padding: 0 !important; margin: 0 !important;
     --imsg-glyph: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5.5M6 11.2l6-6 6 6"/></svg>') !important;
@@ -172,4 +172,9 @@ body.imessage .imsg-cn-scroll::-webkit-scrollbar {
 body.imessage, body.imessage #chat, body.imessage .imsg-cn-scroll {
     scrollbar-width: none !important;
     -ms-overflow-style: none !important;
+}
+/* 有内容时发送键变成 iMessage 的蓝色实心圆（iOS 的空/满两态） */
+body.imessage:has(#send_textarea:not(:placeholder-shown)) #rightSendForm > #send_but {
+    background: var(--imsg-blue) !important;
+    color: #ffffff !important;
 }

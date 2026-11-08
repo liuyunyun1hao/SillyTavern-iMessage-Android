@@ -337,3 +337,85 @@ body.imessage .imsg-cn-sort {
 body.imessage .imsg-cn-sort:active {
     opacity: 0.6;
 }
+
+/* 桌面端是 Mac 版 Messages：没有底部标签栏，入口在侧栏和菜单里 */
+@media screen and (min-width: 1001px) {
+    body.imessage .imsg-tabbar,
+    body.imessage .imsg-me {
+        display: none;
+    }
+    body.imessage.imsg-tabs #sheld {
+        padding-bottom: 0;
+    }
+    body.imessage.imsg-tabs .imsg-cn {
+        padding-bottom: 0;
+    }
+}
+
+/* 手机进对话后不再占一条底栏，和 iOS 一样把高度还给消息 */
+body.imessage.imsg-m-chat .imsg-tabbar {
+    display: none;
+}
+body.imessage.imsg-m-chat #sheld {
+    padding-bottom: 0;
+}
+body.imessage.imsg-m-chat .imsg-cn {
+    padding-bottom: 0;
+}
+
+/* 全屏浮层（背景、设置面板、世界书、通讯录详情、自定义）不叠底栏，和 iOS 一样让内容占满 */
+body.imessage .imsg-cn.imsg-bg,
+body.imessage .imsg-cn.imsg-set,
+body.imessage .imsg-cn.imsg-wi,
+body.imessage:has(#imsg-contacts.imsg-cn-has-detail) .imsg-cn {
+    padding-bottom: 0;
+}
+
+body.imessage:has(> .imsg-cn.imsg-bg) .imsg-tabbar,
+body.imessage:has(> .imsg-cn.imsg-set) .imsg-tabbar,
+body.imessage:has(> .imsg-cn.imsg-wi) .imsg-tabbar,
+body.imessage.imsg-customizing .imsg-tabbar,
+body.imessage:has(#imsg-contacts.imsg-cn-has-detail) .imsg-tabbar {
+    display: none;
+}
+
+/* 深色下「我的」是黑底分组卡片，和 iOS 设置一致（浅色是灰底白卡） */
+body.imessage.imsg-dark .imsg-me {
+    background: var(--imsg-window);
+}
+
+body.imessage.imsg-dark .imsg-me-group {
+    background: var(--imsg-sheet);
+}
+
+/* 新信息是全屏撰写流程，底部标签栏让位，避免误触丢草稿 */
+body.imessage:has(#imsg-contacts.imsg-cn-picking) .imsg-tabbar {
+    display: none;
+}
+
+body.imessage:has(#imsg-contacts.imsg-cn-picking) .imsg-cn {
+    padding-bottom: 0;
+}
+
+/* 撰写新信息时搜索框自动聚焦；iOS 不会给搜索框描一圈蓝边 */
+body.imessage:has(#imsg-contacts.imsg-cn-picking) .imsg-search:focus-within {
+    box-shadow: none;
+}
+
+/* 任何全屏面板（扩展、设置、连接、格式化和后续新增的）都让底栏让位，避免最后几行被盖住 */
+body.imessage:has(> .imsg-cn:not(#imsg-contacts)) .imsg-tabbar {
+    display: none;
+}
+
+body.imessage:has(> .imsg-cn:not(#imsg-contacts)) .imsg-cn {
+    padding-bottom: 0;
+}
+
+/* The phone's list selection mode owns the bottom edge; the tab bar steps aside */
+body.imessage:has(#imsg-sidebar.imsg-editing) .imsg-tabbar {
+    display: none;
+}
+
+body.imessage:has(#imsg-sidebar.imsg-editing) #sheld {
+    padding-bottom: 0;
+}

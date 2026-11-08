@@ -162,14 +162,14 @@ function renderSide(side, pictures, folders) {
     const list = side.querySelector('.imsg-cn-scroll');
     const library = element('div', 'imsg-cn-section');
     library.append(
-        element('h3', 'imsg-cn-section-title', t('Library') + ' 媒体库'),
-        sourceRow(ALL, t('My Backgrounds') + ' 我的背景', pictures.system.length, 'photo'),
-        sourceRow(CHAT, t('This Chat') + ' 本对话', pictures.chat.length, 'bubble'),
+        element('h3', 'imsg-cn-section-title', t('Library 媒体库')),
+        sourceRow(ALL, t('My Backgrounds 我的背景'), pictures.system.length, 'photo'),
+        sourceRow(CHAT, t('This Chat 本对话'), pictures.chat.length, 'bubble'),
     );
     const parts = [library];
     if (folders.length) {
         const box = element('div', 'imsg-cn-section');
-        box.append(element('h3', 'imsg-cn-section-title', t('Folders') + ' 文件夹'));
+        box.append(element('h3', 'imsg-cn-section-title', t('Folders 文件夹')));
         for (const folder of folders) {
             const count = pictures.system.filter((x) => (folderMap[x.file] ?? []).includes(folder.id)).length;
             const row = sourceRow(folder.id, folder.name, count, 'folder');
@@ -214,7 +214,7 @@ function buildTile(picture) {
     }
     const more = element('span', 'imsg-bg-more');
     more.setAttribute('role', 'button');
-    more.setAttribute('aria-label', t('More') + ' 更多');
+    more.setAttribute('aria-label', t('More 更多'));
     more.append(glyph('ellipsis'));
     more.addEventListener('click', (event) => {
         event.stopPropagation();
@@ -238,7 +238,7 @@ function renderGrid(pane, pictures, folders) {
     const shown = (view.source === CHAT ? pictures.chat : pictures.system)
         .filter((x) => !folder || (folderMap[x.file] ?? []).includes(folder.id))
         .filter((x) => !view.needle || x.name.toLowerCase().includes(view.needle.toLowerCase()));
-    const title = view.source === CHAT ? t('This Chat') + ' 本对话' : folder?.name ?? t('My Backgrounds') + ' 我的背景';
+    const title = view.source === CHAT ? t('This Chat 本对话') : folder?.name ?? t('My Backgrounds 我的背景');
 
     const bar = element('header', 'imsg-cn-pane-bar');
     const back = button('imsg-cn-back', 'Library 媒体库', () => {
@@ -247,8 +247,8 @@ function renderGrid(pane, pictures, folders) {
     });
     back.prepend(glyph('chevron-left'));
     const add = button('imsg-sym-button imsg-cn-add-menu');
-    add.setAttribute('aria-label', t('Add Photos') + ' 添加图片');
-    add.title = t('Add Photos') + ' 添加图片';
+    add.setAttribute('aria-label', t('Add Photos 添加图片'));
+    add.title = t('Add Photos 添加图片');
     add.append(glyph('plus'));
     add.addEventListener('click', upload);
     bar.append(back, element('h2', 'imsg-cn-pane-title', title), add);
@@ -256,7 +256,7 @@ function renderGrid(pane, pictures, folders) {
     const status = element('div', 'imsg-bg-status');
     const locked = lockedUrl();
     if (locked) {
-        status.append(element('span', '', t('This chat has its own background.') + ' 本对话有专属背景。'));
+        status.append(element('span', '', t('This chat has its own background. 本对话有专属背景。')));
         const unlock = button('imsg-bg-link', 'Use My Background Again 恢复使用我的背景', () => {
             const tile = [...document.querySelectorAll('#bg_menu_content .bg_example, #bg_custom_content .bg_example')].find((x) => urlOf(x) === locked);
             /** @type {HTMLElement} */ (tile?.querySelector('.jg-button[data-action="unlock"]'))?.click();
@@ -264,14 +264,14 @@ function renderGrid(pane, pictures, folders) {
         });
         status.append(unlock);
     } else {
-        status.append(element('span', '', context().getCurrentChatId?.() ? t('Click a picture to use it everywhere. Right-click for more.') + ' 点击图片全局使用，右键查看更多选项。' : t('Click a picture to use it.') + ' 点击图片使用。'));
+        status.append(element('span', '', context().getCurrentChatId?.() ? t('Click a picture to use it everywhere. Right-click for more. 点击图片全局使用，右键查看更多选项。') : t('Click a picture to use it. 点击图片使用。')));
     }
 
     const grid = element('div', 'imsg-bg-grid');
     if (shown.length) {
         grid.append(...shown.map(buildTile));
     } else {
-        const empty = element('div', 'imsg-cn-empty', view.needle ? t('No Results') + ' 无结果' : view.source === CHAT ? t('No pictures for this chat yet') + ' 本对话暂无图片' : t('No Backgrounds') + ' 无背景');
+        const empty = element('div', 'imsg-cn-empty', view.needle ? t('No Results 无结果') : view.source === CHAT ? t('No pictures for this chat yet 本对话暂无图片') : t('No Backgrounds 无背景'));
         grid.append(empty);
     }
     const scroll = pane.querySelector('.imsg-bg-grid')?.scrollTop ?? 0;
@@ -330,24 +330,24 @@ export async function openBackgrounds() {
     const win = element('div', 'imsg-cn-window');
     win.setAttribute('role', 'dialog');
     win.setAttribute('aria-modal', 'true');
-    win.setAttribute('aria-label', t('Backgrounds') + ' 背景');
+    win.setAttribute('aria-label', t('Backgrounds 背景'));
 
     const side = element('div', 'imsg-cn-side');
     const bar = element('header', 'imsg-cn-bar');
     const add = button('imsg-sym-button imsg-cn-add-menu');
-    add.setAttribute('aria-label', t('Add') + ' 添加');
-    add.title = t('Add') + ' 添加';
+    add.setAttribute('aria-label', t('Add 添加'));
+    add.title = t('Add 添加');
     add.append(glyph('plus'));
     add.addEventListener('click', () => toggleMenu(add, [
         { label: 'Add Photos… 添加图片…', run: upload },
         { label: 'New Folder… 新建文件夹…', run: () => document.getElementById('bg_add_folder_button')?.click() },
     ]));
-    bar.append(button('imsg-cn-done', 'Done 完成', close), element('h1', 'imsg-cn-title', t('Backgrounds') + ' 背景'), add);
+    bar.append(button('imsg-cn-done', 'Done 完成', close), element('h1', 'imsg-cn-title', t('Backgrounds 背景')), add);
     const searchBox = element('label', 'imsg-search imsg-cn-search');
     searchBox.append(glyph('search'));
     const search = element('input');
     search.type = 'search';
-    search.placeholder = t('Search') + ' 搜索';
+    search.placeholder = t('Search 搜索');
     search.setAttribute('aria-label', search.placeholder);
     search.addEventListener('input', () => {
         view.needle = search.value;

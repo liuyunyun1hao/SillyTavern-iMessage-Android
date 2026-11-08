@@ -163,7 +163,7 @@ export function openPanes(def, start = null) {
     const win = element('div', 'imsg-cn-window');
     win.setAttribute('role', 'dialog');
     win.setAttribute('aria-modal', 'true');
-    win.setAttribute('aria-label', def.title);
+    win.setAttribute('aria-label', t(def.title));
     const side = element('div', 'imsg-cn-side');
     const bar = element('header', 'imsg-cn-bar');
     let more = element('span');
@@ -182,7 +182,7 @@ export function openPanes(def, start = null) {
     backBtn.prepend(glyph('chevron-left'));
     
     const doneBtn = button('imsg-cn-done', 'Done 完成', close);
-    bar.append(backBtn, element('h1', 'imsg-cn-title', def.title), doneBtn);
+    bar.append(backBtn, element('h1', 'imsg-cn-title', t(def.title)), doneBtn);
     
     const searchBox = element('label', 'imsg-search imsg-cn-search');
     searchBox.append(glyph('search'));
