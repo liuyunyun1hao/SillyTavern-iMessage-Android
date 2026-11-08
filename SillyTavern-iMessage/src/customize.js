@@ -125,6 +125,7 @@ const SECTIONS = [
             { token: '--imsg-bubble-radius', label: 'Bubble corners 气泡圆角', type: 'range', min: 0, max: 30, step: 1, unit: 'px' },
             { token: '--imsg-radius-lg', label: 'Panel corners 面板圆角', type: 'range', min: 0, max: 24, step: 1, unit: 'px', also: ['--imsg-radius-md'] },
             { flag: 'noTail', label: 'Hide bubble tails 隐藏气泡尾巴', type: 'toggle' },
+            { flag: 'narrowBubbles', label: 'Narrow bubbles 气泡贴文字（关掉宽气泡）', type: 'toggle' },
             {
                 flag: 'avatar', label: 'Pictures 头像形状', type: 'select', options: [['', 'Circle 圆形'], ['rounded', 'Rounded square 圆角方形'], ['square', 'Square 方形']],
             },

@@ -388,3 +388,22 @@ body.imessage.imsg-c-still *::after {
     text-overflow: ellipsis;
     white-space: nowrap;
 }
+
+/* Wide bubbles, on by default: the other person's message nearly fills the screen, with the same
+   gap on both sides, so every long reply reads as one centred column instead of a left-hugging
+   block. Pictures keep their own size; the switch below gives the old text-hugging bubbles back. */
+body.imessage:not(.imsg-c-narrowBubbles) #chat .mes[is_user="false"]:not(.imsg-media, .imsg-jumbo) {
+    grid-template-columns: var(--imsg-av) minmax(0, max-content) 0px;
+}
+
+body.imessage:not(.imsg-c-narrowBubbles) #chat .mes[is_user="false"]:not(.imsg-media, .imsg-jumbo) .mes_block {
+    width: fit-content;
+    max-width: 100%;
+}
+
+@media screen and (max-width: 1000px) {
+    body.imessage:not(.imsg-c-narrowBubbles) #chat .mes[is_user="false"]:not(.imsg-media, .imsg-jumbo) {
+        padding-left: 14px;
+        padding-right: 14px;
+    }
+}
