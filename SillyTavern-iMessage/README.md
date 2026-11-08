@@ -63,6 +63,16 @@ SillyTavern's background image is hidden while the theme is on, unless you turn 
 
 The page also reloads by itself when you turn the theme on and after an update, so you never need to reload it yourself.
 
+## 底栏：聊天 / 联系人 / 我的
+
+打开就是聊天（会话列表），底部三个标签：
+
+- **聊天** — 会话记录；点一条进对话，顶栏的「信息」回到列表。
+- **联系人** — 角色卡（即通讯录）：头像、名字、简介、标签、收藏、分组都在这里；点进去是角色卡详情，可以直接开始对话。
+- **我的** — 用户设置入口：外观与背景、主题自定义（配色/字号/气泡）、人设、扩展、API 与模型、世界书、聊天记录、用户设置。
+
+「我的」里的每一行都会打开酒馆自己的面板，所以原来能调的东西一个都没少，只是入口从顶栏挪到了这里。
+
 ## Settings
 
 Find them under **Extensions** → **iMessage Theme**:

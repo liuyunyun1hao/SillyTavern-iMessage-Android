@@ -19,6 +19,7 @@ import { initMessages, refreshMessages } from './src/messages.js';
 import { initMonograms } from './src/monograms.js';
 import { initShell, refreshHeader, refreshPanelTitles } from './src/shell.js';
 import { initSplit, resetSplits } from './src/split.js';
+import { initTabbar } from './src/tabbar.js';
 import { initWorldInfo } from './src/worldinfo.js';
 
 /** Folder path under scripts/extensions/, e.g. third-party/SillyTavern-iMessage */
@@ -133,6 +134,7 @@ async function init() {
     initFeatures();
     initImages();
     initContacts();
+    initTabbar();
     initBackgrounds();
     initWorldInfo();
     initCustomize({ setSetting, pickBackground: () => openBackgrounds() });

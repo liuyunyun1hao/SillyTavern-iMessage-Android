@@ -1,0 +1,282 @@
+/* 主题关掉时不显示 */
+body:not(.imessage) .imsg-tabbar,
+body:not(.imessage) .imsg-me {
+    display: none;
+}
+
+/* 底部标签栏：聊天 / 联系人 / 我的 —— 和学习「手机 App」一样，开就是聊天，另外两页是角色卡和设置 */
+
+body.imessage {
+    --imsg-tabbar-h: calc(50px + env(safe-area-inset-bottom, 0px));
+}
+
+/* 底栏 */
+body.imessage .imsg-tabbar {
+    position: fixed;
+    z-index: 4000;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    align-items: stretch;
+    height: var(--imsg-tabbar-h);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    box-sizing: border-box;
+    background: var(--imsg-toolbar);
+    -webkit-backdrop-filter: saturate(1.8) blur(20px);
+    backdrop-filter: saturate(1.8) blur(20px);
+    border-top: 0.5px solid var(--imsg-line);
+}
+
+body.imessage .imsg-tab {
+    flex: 1 1 0;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    margin: 0;
+    padding: 4px 0 3px;
+    border: 0;
+    background: none;
+    box-shadow: none;
+    color: var(--imsg-label);
+    font: 400 10px/1.2 var(--imsg-font);
+    letter-spacing: 0.01em;
+    -webkit-tap-highlight-color: transparent;
+    cursor: pointer;
+    transition: color 0.12s linear;
+}
+
+body.imessage .imsg-tab .imsg-sym {
+    width: 22px;
+    height: 22px;
+    --imsg-glyph-size: 22px;
+    opacity: 0.9;
+}
+
+body.imessage .imsg-tab-on {
+    color: var(--imsg-blue);
+}
+
+body.imessage .imsg-tab-on .imsg-sym {
+    opacity: 1;
+}
+
+body.imessage .imsg-tab:active {
+    opacity: 0.55;
+}
+
+/* 聊天页让出底栏的高度 */
+body.imessage.imsg-tabs #sheld {
+    padding-bottom: var(--imsg-tabbar-h);
+    box-sizing: border-box;
+}
+
+body.imessage.imsg-tabs #form_sheld {
+    padding-bottom: 8px !important;
+}
+
+/* 通讯录浮层也让出底栏 */
+body.imessage.imsg-tabs .imsg-cn {
+    padding-bottom: var(--imsg-tabbar-h);
+    box-sizing: border-box;
+}
+
+/* ---------- 我的 ---------- */
+body.imessage .imsg-me {
+    position: fixed;
+    z-index: 3100;
+    inset: 0 0 var(--imsg-tabbar-h);
+    display: flex;
+    flex-direction: column;
+    background: var(--imsg-sheet);
+    color: var(--imsg-fg);
+    font-family: var(--imsg-font);
+}
+
+body.imessage .imsg-me-bar {
+    flex: none;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 10px;
+    padding: calc(env(safe-area-inset-top, 0px) + 10px) 16px 8px;
+    background: var(--imsg-toolbar);
+    border-bottom: 0.5px solid var(--imsg-line);
+}
+
+body.imessage .imsg-me-bar h1 {
+    margin: 0;
+    font: 700 30px/1.15 var(--imsg-font);
+    letter-spacing: -0.02em;
+}
+
+body.imessage .imsg-me-edit {
+    margin: 0 0 4px;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--imsg-blue);
+    font: 400 15px/1.2 var(--imsg-font);
+    cursor: pointer;
+}
+
+body.imessage .imsg-me-scroll {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: 4px 16px calc(20px + env(safe-area-inset-bottom, 0px));
+    scrollbar-width: none;
+}
+
+body.imessage .imsg-me-scroll::-webkit-scrollbar {
+    display: none;
+}
+
+body.imessage .imsg-me-profile {
+    display: flex;
+    align-items: center;
+    gap: 13px;
+    padding: 14px 2px 18px;
+}
+
+body.imessage .imsg-me-avatar {
+    flex: none;
+    width: 62px;
+    height: 62px;
+    display: grid;
+    place-items: center;
+    overflow: hidden;
+    border-radius: 50%;
+    background: linear-gradient(160deg, var(--imsg-mono-top), var(--imsg-mono-bottom));
+    color: #fff;
+    font: 500 24px/1 var(--imsg-font);
+}
+
+body.imessage .imsg-me-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+body.imessage .imsg-me-who {
+    min-width: 0;
+}
+
+body.imessage .imsg-me-who b {
+    display: block;
+    font: 600 21px/1.2 var(--imsg-font);
+    letter-spacing: -0.01em;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+body.imessage .imsg-me-who span {
+    display: block;
+    margin-top: 3px;
+    color: var(--imsg-fg-2);
+    font: 400 13px/1.3 var(--imsg-font);
+}
+
+body.imessage .imsg-me-group {
+    margin: 0 0 20px;
+    border-radius: 11px;
+    overflow: hidden;
+    background: var(--imsg-window);
+}
+
+body.imessage .imsg-me-title {
+    margin: 0 0 7px 4px;
+    color: var(--imsg-label);
+    font: 400 12px/1.3 var(--imsg-font);
+    letter-spacing: 0.02em;
+}
+
+body.imessage .imsg-me-row {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    width: 100%;
+    margin: 0;
+    padding: 11px 13px;
+    border: 0;
+    border-radius: 0;
+    background: none;
+    box-shadow: none;
+    color: var(--imsg-fg);
+    font: 400 16px/1.3 var(--imsg-font);
+    text-align: left;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+}
+
+body.imessage .imsg-me-row + .imsg-me-row,
+body.imessage .imsg-me-row + .imsg-me-note {
+    border-top: 0.5px solid var(--imsg-line);
+}
+
+body.imessage .imsg-me-row:active {
+    background: var(--imsg-hover);
+}
+
+body.imessage .imsg-me-ico {
+    flex: none;
+    width: 29px;
+    height: 29px;
+    display: grid;
+    place-items: center;
+    border-radius: 7px;
+    background: var(--tile, var(--imsg-blue));
+    color: #fff;
+    --imsg-sym-size: 18px;
+}
+
+body.imessage .imsg-me-ico .imsg-sym {
+    width: 18px;
+    height: 18px;
+}
+
+body.imessage .imsg-me-label {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+body.imessage .imsg-me-value {
+    flex: none;
+    max-width: 45%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--imsg-label);
+    font-size: 14px;
+}
+
+body.imessage .imsg-me-chevron {
+    flex: none;
+    width: 8px;
+    height: 13px;
+    margin-left: 2px;
+    --imsg-glyph-size: 13px;
+    color: var(--imsg-fg-3);
+    opacity: 0.9;
+}
+
+body.imessage .imsg-me-note {
+    padding: 10px 13px 12px;
+    color: var(--imsg-label);
+    font: 400 12px/1.45 var(--imsg-font);
+}
+
+body.imessage .imsg-me-ver {
+    margin: 6px 0 0;
+    text-align: center;
+    color: var(--imsg-fg-3);
+    font: 400 11px/1.4 var(--imsg-font);
+}
