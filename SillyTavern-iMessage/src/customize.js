@@ -23,6 +23,81 @@ const FONTS = [
     ['ui-monospace, "SF Mono", Menlo, Consolas, monospace', 'Monospace 等宽'],
 ];
 
+
+/**
+ * One-tap colour schemes, taken from the chat screenshots people keep sending me:
+ * pale pink and sky blue bubbles floating on a photo, or the plain iOS blue.
+ * Each one only owns the bubble tokens below, so it never fights the other controls.
+ */
+const PRESET_KEYS = [
+    '--imsg-bubble-out',
+    '--imsg-bubble-out-fg',
+    '--imsg-bubble-in',
+    '--imsg-bubble-in-fg',
+    '--imsg-bubble-alpha',
+    '--imsg-bubble-blur',
+    '--imsg-focus',
+];
+
+const PRESETS = [
+    {
+        name: 'classic',
+        label: '经典蓝 Classic',
+        swatch: ['#0a84ff', '#e6e6e6'],
+        tokens: {},
+        settings: {},
+        flags: {},
+    },
+    {
+        name: 'blush',
+        label: '柔粉 Blush',
+        swatch: ['#f7c6d4', '#f2e6e9'],
+        tokens: {
+            '--imsg-bubble-out': '#f7c6d4',
+            '--imsg-bubble-out-fg': '#6e3a47',
+            '--imsg-bubble-in': '#f2e6e9',
+            '--imsg-bubble-in-fg': '#3b2c31',
+            '--imsg-bubble-alpha': '90%',
+            '--imsg-bubble-blur': '10px',
+            '--imsg-focus': 'rgba(247, 198, 212, 0.55)',
+        },
+        settings: { appearance: 'light', wallpaper: true, wallpaperBlur: 10, wallpaperDim: 16 },
+        flags: {},
+    },
+    {
+        name: 'sky',
+        label: '天蓝 Sky',
+        swatch: ['#8fd3f4', '#ffffff'],
+        tokens: {
+            '--imsg-bubble-out': '#8fd3f4',
+            '--imsg-bubble-out-fg': '#0c3b4e',
+            '--imsg-bubble-in': '#ffffff',
+            '--imsg-bubble-in-fg': '#1c1c1e',
+            '--imsg-bubble-alpha': '86%',
+            '--imsg-bubble-blur': '8px',
+            '--imsg-focus': 'rgba(143, 211, 244, 0.55)',
+        },
+        settings: { appearance: 'light', wallpaper: true, wallpaperBlur: 8, wallpaperDim: 10 },
+        flags: {},
+    },
+    {
+        name: 'night',
+        label: '夜航 Night',
+        swatch: ['#0a84ff', '#2a2a2e'],
+        tokens: {
+            '--imsg-bubble-out': '#0a84ff',
+            '--imsg-bubble-out-fg': '#ffffff',
+            '--imsg-bubble-in': '#2a2a2e',
+            '--imsg-bubble-in-fg': '#ffffff',
+            '--imsg-bubble-alpha': '92%',
+            '--imsg-bubble-blur': '12px',
+            '--imsg-focus': 'rgba(10, 132, 255, 0.5)',
+        },
+        settings: { appearance: 'dark', wallpaper: true, wallpaperBlur: 12, wallpaperDim: 42 },
+        flags: {},
+    },
+];
+
 const SECTIONS = [
     {
         id: 'colors', title: 'Colors 颜色', controls: [
@@ -269,6 +344,7 @@ function isSet(control) {
 
 function setControl(control, value) {
     const custom = state();
+    delete custom.preset;
     if (control.token) {
         if (value === null) {
             delete custom.tokens[control.token];
@@ -294,6 +370,7 @@ function setControl(control, value) {
 
 function resetSection(section) {
     const custom = state();
+    delete custom.preset;
     for (const control of section.controls) {
         if (control.token) {
             delete custom.tokens[control.token];
@@ -303,6 +380,25 @@ function resetSection(section) {
             custom.css = '';
         }
     }
+    applyCustomize();
+    saveSettings();
+}
+
+/** Paints a preset: its own bubble tokens and a couple of settings, then leaves everything else alone. */
+function applyPreset(preset) {
+    const custom = state();
+    for (const key of PRESET_KEYS) {
+        delete custom.tokens[key];
+    }
+    Object.assign(custom.tokens, preset.tokens);
+    Object.assign(custom.flags, preset.flags);
+    custom.preset = preset.name;
+
+    const settings = getSettings();
+    for (const [key, value] of Object.entries(preset.settings ?? {})) {
+        options.setSetting(key, value);
+    }
+
     applyCustomize();
     saveSettings();
 }
@@ -504,7 +600,29 @@ export function openCustomize() {
         // keep which sections are open and where the panel was scrolled to
         body.querySelectorAll('details').forEach((details) => (details.open ? open.add(details.dataset.id) : open.delete(details.dataset.id)));
         const scroll = body.scrollTop;
-        body.replaceChildren(...SECTIONS.map((section) => {
+        const bar = element('div', 'imsg-cz-presets');
+        bar.append(element('span', 'imsg-cz-presets-title', t('Presets 配色方案')));
+        const strip = element('div', 'imsg-cz-presets-strip');
+        for (const preset of PRESETS) {
+            const chip = element('button', 'imsg-cz-preset');
+            chip.type = 'button';
+            chip.classList.toggle('is-on', state().preset === preset.name);
+            chip.title = t(preset.label.replace(/ [A-Za-z ]+$/, ''));
+            const swatch = element('span', 'imsg-cz-swatch');
+            for (const color of preset.swatch) {
+                const dot = element('i');
+                dot.style.background = color;
+                swatch.append(dot);
+            }
+            chip.append(swatch, element('span', 'imsg-cz-preset-name', t(preset.label)));
+            chip.addEventListener('click', () => {
+                applyPreset(preset);
+                render();
+            });
+            strip.append(chip);
+        }
+        bar.append(strip);
+        body.replaceChildren(bar, ...SECTIONS.map((section) => {
             const details = element('details', 'imsg-cz-section');
             details.dataset.id = section.id;
             details.open = open.has(section.id);
@@ -533,6 +651,7 @@ export function openCustomize() {
         custom.tokens = {};
         custom.flags = {};
         custom.css = '';
+        custom.preset = '';
         applyCustomize();
         saveSettings();
         render();
