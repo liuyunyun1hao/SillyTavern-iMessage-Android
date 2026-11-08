@@ -30,6 +30,7 @@ body.imessage .imsg-tabbar {
 
 body.imessage .imsg-tab {
     flex: 1 1 0;
+    touch-action: manipulation;
     min-width: 0;
     display: flex;
     flex-direction: column;
@@ -198,6 +199,7 @@ body.imessage .imsg-me-title {
 
 body.imessage .imsg-me-row {
     display: flex;
+    touch-action: manipulation;
     align-items: center;
     gap: 11px;
     width: 100%;
@@ -279,4 +281,34 @@ body.imessage .imsg-me-ver {
     text-align: center;
     color: var(--imsg-fg-3);
     font: 400 11px/1.4 var(--imsg-font);
+}
+
+/* 三个页面只建一次，切页只切显示，点起来才跟手 */
+body.imessage .imsg-me.imsg-hidden,
+body.imessage .imsg-cn.imsg-hidden {
+    display: none !important;
+}
+
+/* 按压反馈：立刻下沉一点，不要等过渡 */
+body.imessage .imsg-tab,
+body.imessage .imsg-me-row {
+    transition: transform 0.06s linear, background-color 0.06s linear, opacity 0.06s linear;
+}
+
+body.imessage .imsg-tab:active {
+    transform: scale(0.94);
+}
+
+body.imessage .imsg-me-row:active {
+    transform: scale(0.985);
+}
+
+/* 「我的」在底栏之上铺满，切页时不要闪 */
+body.imessage .imsg-me {
+    animation: none;
+}
+
+body.imessage .imsg-me-bar h1,
+body.imessage .imsg-me-who b {
+    letter-spacing: -0.01em;
 }

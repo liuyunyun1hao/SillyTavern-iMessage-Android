@@ -7,8 +7,35 @@ export function context() {
     return SillyTavern.getContext();
 }
 
+const CJK = /[\u3400-\u9fff\uf900-\ufaff]/;
+const WORD = /^[A-Za-z][A-Za-z'’&\/.\-…:]*$/;
+
+/**
+ * 界面上「English 中文」的双语标签，中文环境下只留中文：'Edit 编辑' → '编辑'。
+ * 全大写缩写（API、JSON、PNG）和 iMessage 这类品牌词不动。
+ */
+function chineseOnly(text) {
+    if (typeof text !== 'string' || !CJK.test(text) || text.toLowerCase().includes('imessage')) {
+        return text;
+    }
+    const words = text.split(' ');
+    let cut = 0;
+    while (cut < words.length) {
+        const word = words[cut];
+        if (!WORD.test(word) || (word.length > 1 && word === word.toUpperCase())) {
+            break;
+        }
+        cut += 1;
+    }
+    if (!cut || cut >= words.length) {
+        return text;
+    }
+    const rest = words.slice(cut).join(' ');
+    return CJK.test(rest) ? rest : text;
+}
+
 export function t(text) {
-    return context().translate(text);
+    return chineseOnly(context().translate(text));
 }
 
 export function isPhone() {

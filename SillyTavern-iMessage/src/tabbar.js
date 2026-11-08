@@ -1,28 +1,22 @@
 // 底部标签栏：聊天 / 联系人 / 我的。
-// 打开就是聊天（会话列表），联系人页就是角色卡，我的页放用户设置、扩展、API、背景这些入口。
+// 开就是聊天（会话列表），联系人页就是角色卡，我的页放用户设置、扩展、API、背景这些入口。
+// 三页都只建一次，来回切只是显示/隐藏，点起来才跟手。
 
 import { button, element, glyph, t } from './dom.js';
 import { openContacts, openMyCard } from './contacts.js';
 import { openCustomize } from './customize.js';
-import { clickOption } from './shell.js';
+import { clickOption, openDrawer } from './shell.js';
 
 const BAR_ID = 'imsg-tabbar';
 const ME_ID = 'imsg-me';
+const CN_ID = 'imsg-cn';
+const HIDDEN = 'imsg-hidden';
 
 const TABS = [
     { key: 'chat', label: 'Chat 聊天', symbol: 'bubble' },
     { key: 'contacts', label: 'Contacts 联系人', symbol: 'person' },
     { key: 'me', label: 'Me 我的', symbol: 'gear' },
 ];
-
-/** 关掉通讯录浮层（它自己的 Done 会收尾状态） */
-function closeContacts() {
-    document.querySelector('#imsg-cn .imsg-cn-done')?.click();
-}
-
-function closeMe() {
-    document.getElementById(ME_ID)?.remove();
-}
 
 function setActive(key) {
     document.body.dataset.imsgTab = key;
@@ -31,13 +25,28 @@ function setActive(key) {
     }
 }
 
-/** 点酒馆顶栏按钮，先关掉「我的」，免得面板被盖住 */
-function openPanel(id) {
-    closeMe();
-    document.getElementById(id)?.click();
+/* ── 联系人页：复用插件的通讯录，点一行直接进对话 ── */
+
+function showContacts() {
+    const root = document.getElementById(CN_ID);
+    if (root) {
+        root.classList.remove(HIDDEN);
+        return;
+    }
+    openContacts({ direct: true });
 }
 
-/** 「我的」页的一行 */
+function hideContacts() {
+    document.getElementById(CN_ID)?.classList.add(HIDDEN);
+}
+
+/* ── 我的 ── */
+
+function openPanel(id) {
+    hideMe();
+    openDrawer(id);
+}
+
 function row({ icon, color, label, value, run }) {
     const node = button('imsg-me-row');
     const tile = element('span', 'imsg-me-ico');
@@ -52,9 +61,8 @@ function row({ icon, color, label, value, run }) {
     return node;
 }
 
-function group(title, rows) {
+function group(rows) {
     const box = element('section', 'imsg-me-group');
-    if (title) box.append(element('h2', 'imsg-me-title', t(title)));
     box.append(...rows);
     return box;
 }
@@ -79,30 +87,28 @@ function profile() {
     return box;
 }
 
-function openMe() {
-    closeMe();
+function buildMe() {
     const root = element('div', 'imsg-me');
     root.id = ME_ID;
 
     const bar = element('header', 'imsg-me-bar');
     bar.append(element('h1', '', t('Me 我的')));
-    const edit = button('imsg-me-edit', t('Edit 编辑'), () => {
-        closeMe();
+    bar.append(button('imsg-me-edit', t('Edit 编辑'), () => {
+        hideMe();
         openMyCard();
-    });
-    bar.append(edit);
+    }));
 
     const scroll = element('div', 'imsg-me-scroll');
     scroll.append(profile());
 
-    scroll.append(group('', [
+    scroll.append(group([
         row({
             icon: 'paintbrush', color: '#0a84ff', label: 'Appearance 外观与背景',
             run: () => openPanel('backgrounds-button'),
         }),
         row({
             icon: 'sliders', color: '#5856d6', label: 'Theme 主题自定义',
-            run: () => { closeMe(); openCustomize(); },
+            run: () => { hideMe(); openCustomize(); },
         }),
         row({
             icon: 'person', color: '#af52de', label: 'Persona 人设',
@@ -110,7 +116,7 @@ function openMe() {
         }),
     ]));
 
-    scroll.append(group('', [
+    scroll.append(group([
         row({
             icon: 'code', color: '#ff3b30', label: 'Extensions 扩展',
             run: () => openPanel('extensions-settings-button'),
@@ -125,10 +131,10 @@ function openMe() {
         }),
     ]));
 
-    scroll.append(group('', [
+    scroll.append(group([
         row({
             icon: 'bubble', color: '#0a84ff', label: 'Chat History 聊天记录',
-            run: () => { closeMe(); clickOption('option_select_chat'); },
+            run: () => { hideMe(); clickOption('option_select_chat'); },
         }),
         row({
             icon: 'gear', color: '#8e8e93', label: 'Settings 用户设置',
@@ -139,7 +145,19 @@ function openMe() {
     scroll.append(element('p', 'imsg-me-ver', 'iMessage Theme · v1.0.1'));
     root.append(bar, scroll);
     document.body.append(root);
+    return root;
 }
+
+function showMe() {
+    const root = document.getElementById(ME_ID) ?? buildMe();
+    root.classList.remove(HIDDEN);
+}
+
+function hideMe() {
+    document.getElementById(ME_ID)?.classList.add(HIDDEN);
+}
+
+/* ── 底栏 ── */
 
 function build() {
     document.getElementById(BAR_ID)?.remove();
@@ -153,19 +171,17 @@ function build() {
         node.append(glyph(tab.symbol), element('span', '', t(tab.label)));
         node.addEventListener('click', () => {
             if (tab.key === 'chat') {
-                closeMe();
-                closeContacts();
+                hideMe();
+                hideContacts();
                 document.body.classList.remove('imsg-m-chat');
-                setActive('chat');
             } else if (tab.key === 'contacts') {
-                closeMe();
-                if (!document.getElementById('imsg-cn')) openContacts();
-                setActive('contacts');
+                hideMe();
+                showContacts();
             } else {
-                closeContacts();
-                openMe();
-                setActive('me');
+                hideContacts();
+                showMe();
             }
+            setActive(tab.key);
         });
         bar.append(node);
     }
@@ -175,24 +191,30 @@ function build() {
 }
 
 function watch() {
-    // 通讯录被关掉（Done / 点空白 / Esc）时，底栏回到「聊天」
+    // 通讯录被关掉（Done / 点空白 / 选了人开始聊天 / Esc）时，底栏回到「聊天」
+    const back = () => setTimeout(() => {
+        if (document.body.dataset.imsgTab === 'contacts' && !document.getElementById(CN_ID)) {
+            setActive('chat');
+        }
+    }, 0);
+
     document.addEventListener('click', (event) => {
         const target = event.target;
-        if (target.closest?.('.imsg-cn-done') || target.classList?.contains('imsg-cn')) {
+        if (target.closest?.('.imsg-cn-done') || target.closest?.('.imsg-cn-row')) {
+            back();
+        } else if (target.classList?.contains('imsg-cn')) {
             setActive('chat');
         }
     }, true);
+
     document.addEventListener('keydown', (event) => {
         if (event.key !== 'Escape') return;
-        if (document.getElementById(ME_ID)) {
-            closeMe();
+        if (document.getElementById(ME_ID) && !document.getElementById(ME_ID).classList.contains(HIDDEN)) {
+            hideMe();
+            setActive(document.getElementById(CN_ID) && !document.getElementById(CN_ID).classList.contains(HIDDEN) ? 'contacts' : 'chat');
             return;
         }
-        setTimeout(() => {
-            if (document.body.dataset.imsgTab === 'contacts' && !document.getElementById('imsg-cn')) {
-                setActive('chat');
-            }
-        }, 0);
+        back();
     });
 }
 
@@ -203,6 +225,6 @@ export function initTabbar() {
 
 export function removeTabbar() {
     document.getElementById(BAR_ID)?.remove();
-    closeMe();
+    document.getElementById(ME_ID)?.remove();
     document.body.classList.remove('imsg-tabs');
 }

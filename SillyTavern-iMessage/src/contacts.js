@@ -42,7 +42,7 @@ const GENERATION_MODES = [
 ];
 
 /** What's on screen: the selection, the mode and the search */
-let view = { key: null, mode: 'card', pick: false, needle: '', tag: null };
+let view = { key: null, mode: 'card', pick: false, direct: false, needle: '', tag: null };
 
 /** Plain text, without markup or macros, cut to a length. */
 function plain(text, limit) {
@@ -350,7 +350,7 @@ function buildRow(item) {
         row.append(element('span', 'imsg-cn-row-note', `${item.group.members?.length ?? 0}`));
     }
     row.addEventListener('click', () => {
-        if (view.pick) {
+        if (view.pick || view.direct) {
             openConversation(item);
             return;
         }
@@ -1314,9 +1314,9 @@ function onKey(event) {
  * @param {{ pick?: boolean, key?: string, edit?: boolean }} [options] pick: New Message (a tap
  *   opens the conversation); key: the contact to show; edit: open their Edit form.
  */
-export function openContacts({ pick = false, key = null, edit = false } = {}) {
+export function openContacts({ pick = false, direct = false, key = null, edit = false } = {}) {
     close();
-    view = { key, mode: edit ? 'edit' : 'card', pick, needle: '', tag: null };
+    view = { key, mode: edit ? 'edit' : 'card', pick, direct, needle: '', tag: null };
 
     const root = element('div');
     root.id = ROOT_ID;
