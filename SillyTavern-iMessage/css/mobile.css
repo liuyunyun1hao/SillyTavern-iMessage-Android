@@ -199,7 +199,7 @@
         left: 0;
         right: 0;
         bottom: 0;
-        z-index: 12;
+        z-index: 40;
         padding: 6px 8px calc(30px + var(--imsg-safe-bottom)) !important;
         background: transparent !important;
         backdrop-filter: none !important;

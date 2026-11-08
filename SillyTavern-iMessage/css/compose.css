@@ -76,10 +76,11 @@ body.imessage #leftSendForm {
 }
 body.imessage #leftSendForm:active { transform: scale(0.85) !important; }
 
-/* 隐藏多余的原生按钮，只留扩展菜单 */
-body.imessage #leftSendForm > div:not(#extensionsMenuButton) { display: none !important; }
-body.imessage #leftSendForm > #extensionsMenuButton {
+/* 隐藏多余的原生按钮，只留聊天选项（加号打开聊天选项，而不是扩展/应用菜单） */
+body.imessage #leftSendForm > div:not(#options_button) { display: none !important; }
+body.imessage #leftSendForm > #options_button {
     width: 100% !important; height: 100% !important; opacity: 0 !important; padding: 0 !important; margin: 0 !important;
+    cursor: pointer !important;
 }
 
 /* 画加号 */
