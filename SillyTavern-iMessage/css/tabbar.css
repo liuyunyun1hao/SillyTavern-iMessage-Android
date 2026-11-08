@@ -88,7 +88,7 @@ body.imessage.imsg-tabs .imsg-cn {
 /* ---------- 我的 ---------- */
 body.imessage .imsg-me {
     position: fixed;
-    z-index: 3100;
+    z-index: 2999;
     inset: 0 0 var(--imsg-tabbar-h);
     display: flex;
     flex-direction: column;
@@ -311,4 +311,29 @@ body.imessage .imsg-me {
 body.imessage .imsg-me-bar h1,
 body.imessage .imsg-me-who b {
     letter-spacing: -0.01em;
+}
+
+/* 通讯录右上角的排序（A–Z / 最近） */
+body.imessage .imsg-cn-tools {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+body.imessage .imsg-cn-sort {
+    margin: 0;
+    padding: 4px 9px;
+    border: 0.5px solid var(--imsg-line);
+    border-radius: 999px;
+    background: var(--imsg-search);
+    color: var(--imsg-blue);
+    font: 400 12px/1.2 var(--imsg-font);
+    letter-spacing: 0.02em;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+}
+
+body.imessage .imsg-cn-sort:active {
+    opacity: 0.6;
 }

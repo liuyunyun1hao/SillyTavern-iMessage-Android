@@ -8,6 +8,7 @@ import { events, onStop } from './power.js';
 import { monogramize, buildMonogram } from './monograms.js';
 import { buildGroupAvatar, clickOption, toggleMenu } from './shell.js';
 import { button, context, element, escapeHtml, glyph, isPhone, overlayOpen, setPicture, t } from './dom.js';
+import { recentTimes } from './list.js';
 
 const ROOT_ID = 'imsg-contacts';
 const ABOUT_LIMIT = 160;
@@ -42,7 +43,7 @@ const GENERATION_MODES = [
 ];
 
 /** What's on screen: the selection, the mode and the search */
-let view = { key: null, mode: 'card', pick: false, direct: false, needle: '', tag: null };
+let view = { key: null, mode: 'card', pick: false, direct: false, needle: '', tag: null, sort: 'name' };
 
 /** Plain text, without markup or macros, cut to a length. */
 function plain(text, limit) {
@@ -126,6 +127,11 @@ function allItems() {
         item.tags = tagsOf(key);
         item.fav = item.group ? !!item.group.fav : (item.character.fav === true || item.character.fav === 'true' || item.character.data?.extensions?.fav === true);
         item.search = [item.name, ...members, ...item.tags.map((tag) => tag.name), item.character ? field(item.character, 'creator_notes') : ''].join('\n').toLowerCase();
+    }
+    if (view.sort === 'recent') {
+        const times = recentTimes();
+        const when = (item) => times.get(item.group ? `g_${item.group.id}` : `c_${item.character.avatar}`) ?? -1;
+        return items.sort((a, b) => when(b) - when(a) || a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }));
     }
     return items.sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }));
 }
@@ -1342,7 +1348,17 @@ export function openContacts({ pick = false, direct = false, key = null, edit = 
         ]);
     });
     const done = button('imsg-cn-done', pick ? 'Cancel' : 'Done', close);
-    bar.append(done, element('h1', 'imsg-cn-title', t(pick ? 'New Message' : 'Contacts')), pick ? element('span') : add);
+    const sort = button('imsg-cn-sort', view.sort === 'recent' ? '最近' : 'A–Z', () => {
+        view.sort = view.sort === 'recent' ? 'name' : 'recent';
+        sort.textContent = view.sort === 'recent' ? '最近' : 'A–Z';
+        sort.title = t(view.sort === 'recent' ? 'Sort by recent 按最近' : 'Sort by name 按字母');
+        root.querySelector('.imsg-cn-scroll').scrollTop = 0;
+        render();
+    });
+    sort.title = t(view.sort === 'recent' ? 'Sort by recent 按最近' : 'Sort by name 按字母');
+    const tools = element('span', 'imsg-cn-tools');
+    tools.append(sort, add);
+    bar.append(done, element('h1', 'imsg-cn-title', t(pick ? 'New Message' : 'Contacts')), pick ? element('span') : tools);
 
     const searchBox = element('label', 'imsg-search imsg-cn-search');
     searchBox.append(glyph('search'));

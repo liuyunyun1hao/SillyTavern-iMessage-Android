@@ -18,7 +18,7 @@ const HEAD_AVATAR = 40;
 const HEAD_AVATAR_PHONE = 50;
 
 /** The app's menus, named the way a Mac app would list them, in its own order */
-const PANELS = [
+export const PANELS = [
     { id: 'ai-config-button', content: 'left-nav-panel', label: 'Response Settings 响应设置' },
     { id: 'sys-settings-button', content: 'rm_api_block', label: 'Connections 连接' },
     { id: 'advanced-formatting-button', content: 'AdvancedFormatting', label: 'Formatting 格式化' },
@@ -129,6 +129,11 @@ function chatOptionItems() {
 function appItems() {
     const root = document.getElementById('extensionsMenu');
     return root ? itemsFrom(root, root.querySelectorAll('.list-group-item')) : [];
+}
+
+/** 打开酒馆的某个面板：主题自己画的那几个走 NATIVE，其余点它原来的抽屉开关 */
+export function openPanelById(id) {
+    (NATIVE[id] ?? (() => openDrawer(id)))();
 }
 
 /** Hides or shows the conversation list. */
@@ -244,8 +249,6 @@ function appMenuItems() {
     const dark = shellOptions.isDark();
     return [
     { label: 'New Message 新信息', run: newMessage },
-    {},
-    ...PANELS.filter(({ id }) => document.getElementById(id)).map(({ id, label }) => ({ label, run: NATIVE[id] ?? (() => openDrawer(id)) })),
     {},
     { label: 'Light Mode 浅色模式', checked: !dark, run: () => shellOptions.setAppearance('light') },
     { label: 'Dark Mode 深色模式', checked: dark, run: () => shellOptions.setAppearance('dark') },

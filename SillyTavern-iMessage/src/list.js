@@ -201,6 +201,18 @@ function render() {
 }
 
 /** Moves the highlight to the open conversation without fetching the list again. */
+/** 每个联系人/群最近一条消息的时间，通讯录按「最近」排序时用 */
+export function recentTimes() {
+    const map = new Map();
+    for (const entry of entries) {
+        const key = entry.group ? `g_${entry.group}` : `c_${entry.avatar}`;
+        if (!map.has(key) || map.get(key) < entry.lastMes) {
+            map.set(key, entry.lastMes);
+        }
+    }
+    return map;
+}
+
 export function markCurrent() {
     const sidebar = document.getElementById(SIDEBAR_ID);
     if (!sidebar) {

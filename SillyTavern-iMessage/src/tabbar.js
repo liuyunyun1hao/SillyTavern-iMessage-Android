@@ -2,14 +2,14 @@
 // 开就是聊天（会话列表），联系人页就是角色卡，我的页放用户设置、扩展、API、背景这些入口。
 // 三页都只建一次，来回切只是显示/隐藏，点起来才跟手。
 
+import * as personas from '../../../../personas.js';
 import { button, element, glyph, t } from './dom.js';
 import { openContacts, openMyCard } from './contacts.js';
-import { openCustomize } from './customize.js';
-import { clickOption, openDrawer } from './shell.js';
+import { clickOption, openPanelById } from './shell.js';
 
 const BAR_ID = 'imsg-tabbar';
 const ME_ID = 'imsg-me';
-const CN_ID = 'imsg-cn';
+const CN_ID = 'imsg-contacts';
 const HIDDEN = 'imsg-hidden';
 
 const TABS = [
@@ -42,9 +42,9 @@ function hideContacts() {
 
 /* ── 我的 ── */
 
+// 面板开在「我的」上面，关掉之后还留在「我的」，不会被弹回聊天
 function openPanel(id) {
-    hideMe();
-    openDrawer(id);
+    openPanelById(id);
 }
 
 function row({ icon, color, label, value, run }) {
@@ -71,19 +71,28 @@ function profile() {
     const ctx = SillyTavern.getContext();
     const box = element('div', 'imsg-me-profile');
     const avatar = element('span', 'imsg-me-avatar');
-    const userAvatar = ctx.user_avatar || ctx.personas?.user_avatar;
-    if (userAvatar) {
-        const img = element('img');
-        img.src = `/User Avatars/${encodeURIComponent(userAvatar)}`;
-        img.alt = '';
-        avatar.append(img);
-    } else {
-        avatar.textContent = (ctx.name1 || 'Me').trim().charAt(0);
-    }
     const who = element('div', 'imsg-me-who');
     who.append(element('b', '', ctx.name1 || t('Me 我')));
     who.append(element('span', '', t('Persona 当前人设')));
     box.append(avatar, who);
+
+    /** 当前人设的头像和名字，换人设时跟着换 */
+    const update = () => {
+        const live = SillyTavern.getContext();
+        const userAvatar = personas.user_avatar || live.user_avatar;
+        avatar.replaceChildren();
+        if (userAvatar) {
+            const img = element('img');
+            img.src = `/User Avatars/${encodeURIComponent(userAvatar)}`;
+            img.alt = '';
+            avatar.append(img);
+        } else {
+            avatar.textContent = (live.name1 || 'Me').trim().charAt(0);
+        }
+        who.firstElementChild.textContent = live.name1 || t('Me 我');
+    };
+    update();
+    box.dataset.refresh = 'me';
     return box;
 }
 
@@ -102,43 +111,27 @@ function buildMe() {
     scroll.append(profile());
 
     scroll.append(group([
+        row({ icon: 'paintbrush', color: '#0a84ff', label: 'Backgrounds 背景', run: () => openPanel('backgrounds-button') }),
+        row({ icon: 'code', color: '#ff3b30', label: 'Extensions 扩展', run: () => openPanel('extensions-settings-button') }),
+        row({ icon: 'person', color: '#af52de', label: 'Personas 角色', run: () => openPanel('persona-management-button') }),
         row({
-            icon: 'paintbrush', color: '#0a84ff', label: 'Appearance 外观与背景',
-            run: () => openPanel('backgrounds-button'),
-        }),
-        row({
-            icon: 'sliders', color: '#5856d6', label: 'Theme 主题自定义',
-            run: () => { hideMe(); openCustomize(); },
-        }),
-        row({
-            icon: 'person', color: '#af52de', label: 'Persona 人设',
-            run: () => openPanel('persona-management-button'),
+            icon: 'person', color: '#34c759', label: 'Contacts 联系人',
+            run: () => { hideMe(); showContacts(); setActive('contacts'); },
         }),
     ]));
 
     scroll.append(group([
-        row({
-            icon: 'code', color: '#ff3b30', label: 'Extensions 扩展',
-            run: () => openPanel('extensions-settings-button'),
-        }),
-        row({
-            icon: 'bolt', color: '#34c759', label: 'API 与模型',
-            run: () => openPanel('sys-settings-button'),
-        }),
-        row({
-            icon: 'book', color: '#8e8e93', label: 'World Info 世界书',
-            run: () => openPanel('WI-SP-button'),
-        }),
+        row({ icon: 'sliders', color: '#5856d6', label: 'Response Settings 响应设置', run: () => openPanel('ai-config-button') }),
+        row({ icon: 'plug', color: '#34c759', label: 'Connections 连接', run: () => openPanel('sys-settings-button') }),
+        row({ icon: 'textformat', color: '#ff9500', label: 'Formatting 格式化', run: () => openPanel('advanced-formatting-button') }),
+        row({ icon: 'book', color: '#8e8e93', label: 'World Info 世界书', run: () => openPanel('WI-SP-button') }),
+        row({ icon: 'gear', color: '#8e8e93', label: 'Settings 设置', run: () => openPanel('user-settings-button') }),
     ]));
 
     scroll.append(group([
         row({
             icon: 'bubble', color: '#0a84ff', label: 'Chat History 聊天记录',
             run: () => { hideMe(); clickOption('option_select_chat'); },
-        }),
-        row({
-            icon: 'gear', color: '#8e8e93', label: 'Settings 用户设置',
-            run: () => openPanel('user-settings-button'),
         }),
     ]));
 
@@ -151,6 +144,24 @@ function buildMe() {
 function showMe() {
     const root = document.getElementById(ME_ID) ?? buildMe();
     root.classList.remove(HIDDEN);
+    // 每次进「我的」都对一遍当前人设
+    const profileBox = root.querySelector('.imsg-me-profile');
+    if (profileBox) {
+        const avatar = profileBox.querySelector('.imsg-me-avatar');
+        const name = profileBox.querySelector('.imsg-me-who b');
+        const live = SillyTavern.getContext();
+        const userAvatar = personas.user_avatar || live.user_avatar;
+        avatar.replaceChildren();
+        if (userAvatar) {
+            const img = element('img');
+            img.src = `/User Avatars/${encodeURIComponent(userAvatar)}`;
+            img.alt = '';
+            avatar.append(img);
+        } else {
+            avatar.textContent = (live.name1 || 'Me').trim().charAt(0);
+        }
+        if (name) name.textContent = live.name1 || t('Me 我');
+    }
 }
 
 function hideMe() {
