@@ -27,8 +27,10 @@ const FONTS = [
 /**
  * One-tap colour schemes, taken from the chat screenshots people keep sending me:
  * pale pink and sky blue bubbles floating on a photo, or the plain iOS blue.
- * Each one only owns the bubble tokens below, so it never fights the other controls.
+ * Each one owns the bubble tokens and glass switches, so it never fights the other controls.
  */
+const PRESET_FLAGS = ['glassUI', 'acrylic', 'bubbleShadow'];
+
 const PRESET_KEYS = [
     '--imsg-bubble-out',
     '--imsg-bubble-out-fg',
@@ -95,6 +97,38 @@ const PRESETS = [
         },
         settings: { appearance: 'dark', wallpaper: true, wallpaperBlur: 12, wallpaperDim: 42 },
         flags: {},
+    },
+    {
+        name: 'glass',
+        label: 'iOS 毛玻璃',
+        swatch: ['rgba(10,132,255,0.55)', 'rgba(255,255,255,0.55)'],
+        tokens: {
+            '--imsg-bubble-out': '#0a84ff',
+            '--imsg-bubble-out-fg': '#ffffff',
+            '--imsg-bubble-in': '#ffffff',
+            '--imsg-bubble-in-fg': '#1c1c1e',
+            '--imsg-bubble-alpha': '70%',
+            '--imsg-bubble-blur': '24px',
+            '--imsg-focus': 'rgba(10, 132, 255, 0.42)',
+        },
+        settings: { appearance: 'light', wallpaper: true, wallpaperBlur: 6, wallpaperDim: 8 },
+        flags: { glassUI: true, bubbleShadow: true },
+    },
+    {
+        name: 'glass-dark',
+        label: '暗夜毛玻璃',
+        swatch: ['rgba(10,132,255,0.6)', 'rgba(60,60,64,0.6)'],
+        tokens: {
+            '--imsg-bubble-out': '#0a84ff',
+            '--imsg-bubble-out-fg': '#ffffff',
+            '--imsg-bubble-in': '#3a3a3e',
+            '--imsg-bubble-in-fg': '#ffffff',
+            '--imsg-bubble-alpha': '70%',
+            '--imsg-bubble-blur': '24px',
+            '--imsg-focus': 'rgba(10, 132, 255, 0.5)',
+        },
+        settings: { appearance: 'dark', wallpaper: true, wallpaperBlur: 12, wallpaperDim: 46 },
+        flags: { glassUI: true, bubbleShadow: true },
     },
 ];
 
@@ -164,6 +198,7 @@ const SECTIONS = [
             { token: '--imsg-bubble-alpha', label: 'Bubble opacity 气泡透明度', type: 'range', min: 10, max: 100, step: 1, unit: '%' },
             { token: '--imsg-bubble-blur', label: 'Bubble blur 气泡模糊', type: 'range', min: 0, max: 40, step: 1, unit: 'px' },
             { flag: 'acrylic', label: 'Acrylic glass 亚克力效果', type: 'toggle' },
+            { flag: 'glassUI', label: 'Frosted composer 毛玻璃输入条', type: 'toggle' },
             { flag: 'bubbleShadow', label: 'Bubble shadow 气泡阴影', type: 'toggle' },
             { setting: 'splitReplies', label: 'Split long replies 分段显示长回复', type: 'toggle' },
             { setting: 'imageLinks', label: 'Show image links as pictures 图片链接显示为图片', type: 'toggle' },
@@ -391,6 +426,9 @@ function applyPreset(preset) {
     for (const key of PRESET_KEYS) {
         delete custom.tokens[key];
     }
+    for (const key of PRESET_FLAGS) {
+        delete custom.flags[key];
+    }
     Object.assign(custom.tokens, preset.tokens);
     Object.assign(custom.flags, preset.flags);
     custom.preset = preset.name;
@@ -602,7 +640,7 @@ export function openCustomize() {
         body.querySelectorAll('details').forEach((details) => (details.open ? open.add(details.dataset.id) : open.delete(details.dataset.id)));
         const scroll = body.scrollTop;
         const bar = element('div', 'imsg-cz-presets');
-        bar.append(element('span', 'imsg-cz-presets-title', t('Presets 配色方案')));
+        bar.append(element('span', 'imsg-cz-presets-title', t('主题方案')));
         const strip = element('div', 'imsg-cz-presets-strip');
         for (const preset of PRESETS) {
             const chip = element('button', 'imsg-cz-preset');

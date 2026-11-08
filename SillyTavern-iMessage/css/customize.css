@@ -281,6 +281,32 @@ body.imessage.imsg-c-hideJump #imsg-jump {
     display: none !important;
 }
 
+/* frosted composer: the field and its buttons become glass over the wallpaper */
+body.imessage.imsg-c-glassUI #imsg-head {
+    background: color-mix(in srgb, var(--imsg-toolbar) 62%, transparent) !important;
+}
+
+body.imessage.imsg-c-glassUI #nonQRFormItems {
+    background: color-mix(in srgb, var(--imsg-sheet) 52%, transparent) !important;
+    -webkit-backdrop-filter: blur(22px) saturate(1.8) !important;
+    backdrop-filter: blur(22px) saturate(1.8) !important;
+    box-shadow: inset 0 0 0 0.5px rgba(255, 255, 255, 0.35), 0 6px 20px rgba(0, 0, 0, 0.08);
+}
+
+body.imessage.imsg-c-glassUI #leftSendForm,
+body.imessage.imsg-c-glassUI #send_but {
+    background: color-mix(in srgb, var(--imsg-sheet) 45%, transparent) !important;
+    -webkit-backdrop-filter: blur(18px) saturate(1.8) !important;
+    backdrop-filter: blur(18px) saturate(1.8) !important;
+}
+
+body.imessage.imsg-c-glassUI #send_but { color: var(--imsg-blue) !important; }
+body.imessage.imsg-c-glassUI #send_textarea::placeholder { color: var(--imsg-fg-2) !important; }
+
+body.imessage.imsg-c-glassUI.imsg-dark #nonQRFormItems {
+    box-shadow: inset 0 0 0 0.5px rgba(255, 255, 255, 0.14), 0 6px 20px rgba(0, 0, 0, 0.3);
+}
+
 /* acrylic: a sheen and a fine grain over a see-through bubble */
 body.imessage.imsg-c-acrylic #chat .mes:not(.imsg-split, .imsg-media, .imsg-jumbo) .mes_block,
 body.imessage.imsg-c-acrylic #chat .mes .imsg-parts > .imsg-part {
@@ -326,7 +352,7 @@ body.imessage.imsg-c-still *::after {
 
 #imsg-customize .imsg-cz-presets-strip {
     display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 6px;
 }
 
