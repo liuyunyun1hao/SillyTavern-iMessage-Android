@@ -3,8 +3,9 @@
 // 三页都只建一次，来回切只是显示/隐藏，点起来才跟手。
 
 import * as personas from '../../../../personas.js';
-import { button, element, glyph, t } from './dom.js';
+import { button, element, glyph, setPicture, t } from './dom.js';
 import { openContacts, openMyCard } from './contacts.js';
+import { openCustomize } from './customize.js';
 import { clickOption, openPanelById } from './shell.js';
 
 const BAR_ID = 'imsg-tabbar';
@@ -83,8 +84,8 @@ function profile() {
         avatar.replaceChildren();
         if (userAvatar) {
             const img = element('img');
-            img.src = `/User Avatars/${encodeURIComponent(userAvatar)}`;
             img.alt = '';
+            setPicture(img, 'persona', userAvatar, 96);
             avatar.append(img);
         } else {
             avatar.textContent = (live.name1 || 'Me').trim().charAt(0);
@@ -121,6 +122,7 @@ function buildMe() {
     ]));
 
     scroll.append(group([
+        row({ icon: 'sliders', color: '#5856d6', label: 'Customize… 自定义…', run: () => openCustomize() }),
         row({ icon: 'sliders', color: '#5856d6', label: 'Response Settings 响应设置', run: () => openPanel('ai-config-button') }),
         row({ icon: 'plug', color: '#34c759', label: 'Connections 连接', run: () => openPanel('sys-settings-button') }),
         row({ icon: 'textformat', color: '#ff9500', label: 'Formatting 格式化', run: () => openPanel('advanced-formatting-button') }),
@@ -154,8 +156,8 @@ function showMe() {
         avatar.replaceChildren();
         if (userAvatar) {
             const img = element('img');
-            img.src = `/User Avatars/${encodeURIComponent(userAvatar)}`;
             img.alt = '';
+            setPicture(img, 'persona', userAvatar, 96);
             avatar.append(img);
         } else {
             avatar.textContent = (live.name1 || 'Me').trim().charAt(0);
