@@ -31,12 +31,12 @@ const STRATEGIES = [[0, 'Sorted evenly 均匀排序'], [1, "Character's books fi
 const TRIGGERS = [['normal', 'Normal 普通'], ['continue', 'Continue 继续'], ['impersonate', 'Impersonate 扮演'], ['swipe', 'Swipe 滑动'], ['regenerate', 'Regenerate 重新生成'], ['quiet', 'Quiet 静默']];
 
 const SCAN_SETTINGS = [
-    { id: 'world_info_depth', label: 'Scan depth 扫描深度', hint: 'How many recent messages are searched for keywords.', min: 0, max: 100 },
-    { id: 'world_info_budget', label: 'Context share 上下文占比', hint: 'The most of the context World Info may use, in percent.', min: 1, max: 100, unit: '%' },
-    { id: 'world_info_budget_cap', label: 'Token limit Token限制', hint: '0 for no limit.', min: 0, max: 65536, step: 64 },
-    { id: 'world_info_min_activations', label: 'Minimum entries 最少条目', hint: '0 to turn off.', min: 0, max: 100 },
-    { id: 'world_info_min_activations_depth_max', label: 'Furthest it scans 最远扫描', hint: '0 for no limit.', min: 0, max: 100 },
-    { id: 'world_info_max_recursion_steps', label: 'Recursion steps 递归步数', hint: '0 for no limit.', min: 0, max: 10 },
+    { id: 'world_info_depth', label: '扫描深度', hint: '最近多少条消息参与关键词扫描。', min: 0, max: 100 },
+    { id: 'world_info_budget', label: '上下文占比', hint: '世界书最多占用的上下文比例。', min: 1, max: 100, unit: '%' },
+    { id: 'world_info_budget_cap', label: '令牌上限', hint: '0 表示不限制。', min: 0, max: 65536, step: 64 },
+    { id: 'world_info_min_activations', label: '最少条目', hint: '0 表示关闭。', min: 0, max: 100 },
+    { id: 'world_info_min_activations_depth_max', label: '最远扫描', hint: '0 表示不限制。', min: 0, max: 100 },
+    { id: 'world_info_max_recursion_steps', label: '递归步数', hint: '0 表示不限制。', min: 0, max: 10 },
 ];
 const SCAN_FLAGS = [
     { id: 'world_info_include_names', label: 'Include names when scanning 扫描时包含名称' },
@@ -399,9 +399,9 @@ function renderEntry(column, entry) {
 
     const modeBox = element('fieldset', 'imsg-cn-group imsg-wi-mode');
     const modeItems = [
-        ['When a keyword comes up 当关键词出现时', () => !entry.constant && !entry.vectorized],
-        ['Always 始终', () => !!entry.constant],
-        ["When it's relevant (vector search) 相关时（向量搜索）", () => !!entry.vectorized],
+        ['当关键词出现时', () => !entry.constant && !entry.vectorized],
+        ['始终', () => !!entry.constant],
+        ['相关时（向量搜索）', () => !!entry.vectorized],
     ];
     for (const [label, test] of modeItems) {
         const item = element('label', 'imsg-cn-radio');
@@ -410,8 +410,8 @@ function renderEntry(column, entry) {
         radio.name = `imsg-wi-mode-${entry.uid}`;
         radio.checked = test();
         radio.addEventListener('change', () => {
-            entry.constant = label.startsWith('Always');
-            entry.vectorized = label.startsWith("When it's");
+            entry.constant = label === '始终';
+            entry.vectorized = label === '相关时（向量搜索）';
             saveSoon();
             render();
         });
@@ -430,7 +430,7 @@ function renderEntry(column, entry) {
             entry.key = keyInput.value.split(',').map((s) => s.trim()).filter(Boolean);
             saveSoon();
         });
-        body.append(field('Keywords 关键词', keyInput, '用逗号分隔，/斜杠/表示正则表达式'));
+        body.append(field('Keywords 关键词', keyInput, '用逗号分隔，/…/ 表示正则表达式'));
 
         const secInput = element('textarea');
         secInput.className = 'imsg-wi-keys';
@@ -560,11 +560,11 @@ function renderSettings(column) {
         slider.type = 'range';
         slider.min = String(item.min ?? 0); slider.max = String(item.max ?? 100);
         slider.step = String(item.step ?? 1); slider.value = String(current);
-        const valueLabel = element('span', 'imsg-wi-value', `${current}${item.unit ?? ''}`);
+        const valueLabel = element('span', 'imsg-wi-value', ` ${current}${item.unit ?? ''}`);
         slider.addEventListener('input', () => {
             control.value = slider.value;
             control.dispatchEvent(new Event('input', { bubbles: true }));
-            valueLabel.textContent = `${slider.value}${item.unit ?? ''}`;
+            valueLabel.textContent = ` ${slider.value}${item.unit ?? ''}`;
         });
         const row = field(item.label, slider, item.hint);
         row.querySelector('.imsg-cn-field-label').append(valueLabel);
@@ -629,8 +629,10 @@ function render() {
         renderEntries(mid);
         detail.replaceChildren(element('div', 'imsg-cn-empty', t('Select an entry 选择一个条目')));
     }
-    root.classList.toggle('imsg-cn-has-detail', view.level >= 1);
-    root.classList.toggle('imsg-wi-has-entry', view.level >= 2);
+    // 桌面三栏始终并列；手机按 level 逐级滑动（侧栏 → 条目 → 条目编辑）。
+    root.classList.toggle('imsg-wi-settings', view.book === SETTINGS);
+    root.classList.toggle('imsg-wi-level-1', view.level >= 1);
+    root.classList.toggle('imsg-wi-level-2', view.level >= 2);
 }
 
 function close() {
@@ -681,7 +683,7 @@ export async function openWorldInfo(name = null) {
     const listWrap = element('div', 'imsg-cn-listwrap');
     listWrap.append(element('div', 'imsg-cn-scroll'));
     side.append(bar, listWrap);
-    const mid = element('section', 'imsg-wi-mid');
+    const mid = element('section', 'imsg-wi-mid imsg-wi-list');
     const detail = element('section', 'imsg-cn-detail imsg-wi-detail');
     win.append(side, mid, detail);
     root.append(win);

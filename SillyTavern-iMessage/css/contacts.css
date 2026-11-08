@@ -1488,6 +1488,98 @@ body.imessage .imsg-cn .imsg-wi-slider input[type="number"] {
     }
 }
 
+/* 条目编辑器的正文区域：可滚动、留白，标题输入像 Notes 的大标题 */
+body.imessage .imsg-wi-body {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    flex: 1;
+    min-height: 0;
+    padding: 10px 14px calc(28px + env(safe-area-inset-bottom, 0px));
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    background: var(--imsg-window);
+}
+
+body.imessage .imsg-cn .imsg-wi-body > input.imsg-wi-title-input {
+    width: 100%;
+    margin: 0;
+    padding: 4px 2px;
+    border: none;
+    outline: none;
+    background: none;
+    box-shadow: none !important;
+    color: var(--imsg-fg);
+    font-family: var(--imsg-font-display);
+    font-size: 22px !important;
+    font-weight: 700;
+}
+
+body.imessage .imsg-wi-mode {
+    gap: 2px;
+    padding: 6px;
+}
+
+body.imessage .imsg-cn-radio {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 8px;
+    border-radius: 8px;
+    color: var(--imsg-fg);
+    font-size: var(--imsg-text-sm);
+    cursor: default;
+}
+
+body.imessage .imsg-cn-radio:active {
+    background: var(--imsg-pressed-bg);
+}
+
+body.imessage .imsg-cn .imsg-cn-radio input[type="radio"] {
+    flex: none;
+    width: 18px;
+    height: 18px;
+    min-height: 0;
+    margin: 0;
+    padding: 0;
+    border: none;
+    background: none;
+    box-shadow: none;
+    accent-color: var(--imsg-blue);
+}
+
+body.imessage .imsg-wi-value {
+    margin-left: 4px;
+    color: var(--imsg-fg-2);
+    font-weight: 400;
+}
+
+body.imessage .imsg-wi-enabled,
+body.imessage .imsg-wi-flag {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    background: var(--imsg-group-bg);
+    color: var(--imsg-fg);
+    font-size: var(--imsg-text-sm);
+}
+
+body.imessage .imsg-wi-advanced summary {
+    padding: 8px 2px;
+    color: var(--imsg-blue);
+    font-size: var(--imsg-text-sm);
+    cursor: default;
+}
+
+body.imessage .imsg-wi-advanced[open] {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
 /* ── Extensions: System Settings-style panes ── */
 
 body.imessage .imsg-ext .imsg-cn-window {

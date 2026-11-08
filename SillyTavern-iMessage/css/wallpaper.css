@@ -30,12 +30,18 @@ body.imessage.imsg-wall #chat {
     background: transparent;
 }
 
-body.imessage.imsg-wall #imsg-head,
-body.imessage.imsg-wall #form_sheld {
+body.imessage.imsg-wall #imsg-head {
     background: var(--imsg-toolbar);
     /* the app's No Blur mode turns every backdrop blur off with !important */
     backdrop-filter: blur(20px) saturate(1.8) !important;
     -webkit-backdrop-filter: blur(20px) saturate(1.8) !important;
+}
+
+/* 输入框本身悬浮，不再铺一条模糊底板 */
+body.imessage.imsg-wall #form_sheld {
+    background: transparent !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
 }
 
 /* the character pictures holder sat behind the solid pane; keep it out of the picture */

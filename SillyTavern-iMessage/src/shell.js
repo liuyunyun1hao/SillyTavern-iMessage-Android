@@ -9,7 +9,7 @@ import { openExtensions } from './addons.js';
 import { openConnections, openFormatting, openResponseSettings, openSettings } from './settings.js';
 import { buildMonogram, monogramize } from './monograms.js';
 import { events, onStart, whenOn } from './power.js';
-import { button, glyph, setPicture, t } from './dom.js';
+import { button, glyph, isPhone, setPicture, t } from './dom.js';
 
 const HEADER_ID = 'imsg-head';
 const MENU_ID = 'imsg-menu';
@@ -160,6 +160,8 @@ let menuListening = false;
 
 /** 从面板返回到菜单时，重新弹出下拉菜单 */
 export function reopenMenu() {
+    // 手机上应用菜单只有一个隐藏的桌面锚点，重开会飘到屏幕左上角；手机入口都在「我的」里。
+    if (isPhone()) return;
     if (menuAnchor && document.body.contains(menuAnchor)) {
         toggleMenu(menuAnchor, appMenuItems());
     }

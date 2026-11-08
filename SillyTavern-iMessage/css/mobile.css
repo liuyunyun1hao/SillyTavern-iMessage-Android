@@ -178,7 +178,7 @@
     body.imessage .imsg-head-actions .imsg-sym-button { width: 40px; height: 44px; color: var(--imsg-blue); }
     body.imessage .imsg-head-actions .imsg-sym-button:hover { background: none; }
 
-    body.imessage #chat { padding: 6px 0 8px; --imsg-room: 28%; }
+    body.imessage #chat { padding: 6px 0 calc(92px + var(--imsg-safe-bottom)); --imsg-room: 28%; }
     body.imessage #chat .mes { padding-left: 18px; padding-right: 18px; }
     body.imessage #chat .mes :is(.mes_text, .imsg-part) { letter-spacing: -0.03em; font-weight: 400; }
 
@@ -193,11 +193,17 @@
     }
     body.imessage #chat .mes .edit_textarea { min-width: 60vw; }
 
+    /* 输入条悬浮在对话之上：没有整条模糊底板，只有白色圆角输入框，气泡从下方穿过 */
     body.imessage #form_sheld {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 12;
         padding: 6px 8px calc(30px + var(--imsg-safe-bottom)) !important;
-        background: var(--imsg-toolbar);
-        backdrop-filter: blur(20px) saturate(1.8);
-        -webkit-backdrop-filter: blur(20px) saturate(1.8);
+        background: transparent !important;
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
     }
     body.imessage #nonQRFormItems { border-radius: 18px; }
     body.imessage #send_textarea {
