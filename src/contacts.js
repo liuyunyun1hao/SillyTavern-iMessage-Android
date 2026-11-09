@@ -977,12 +977,21 @@ function renderGroupForm(pane, item) {
 /** The bar over the right-hand pane: back (on a phone), the title, and its buttons. */
 function paneBar(title, primary, secondary) {
     const bar = element('header', 'imsg-cn-pane-bar');
-    const back = button('imsg-cn-back', 'Contacts', () => {
+    // 只留一个箭头，不再带「联系人」三个字；从「我的」进来时返回「我的」，否则退回列表
+    const back = button('imsg-cn-back', 'Back 返回', () => {
+        if (view.onClose) {
+            const leave = view.onClose;
+            close();
+            leave();
+            return;
+        }
         view.key = null;
         view.mode = 'card';
         render();
     });
+    back.textContent = '';
     back.prepend(glyph('chevron-left'));
+    back.setAttribute('aria-label', t('Back 返回'));
     bar.append(secondary ?? back, element('h2', 'imsg-cn-pane-title', title ?? ''), primary ?? element('span'));
     return bar;
 }
@@ -1332,9 +1341,9 @@ function onKey(event) {
  * @param {{ pick?: boolean, key?: string, edit?: boolean }} [options] pick: New Message (a tap
  *   opens the conversation); key: the contact to show; edit: open their Edit form.
  */
-export function openContacts({ pick = false, direct = false, key = null, edit = false } = {}) {
+export function openContacts({ pick = false, direct = false, key = null, edit = false, onClose = null } = {}) {
     close();
-    view = { key, mode: edit ? 'edit' : 'card', pick, direct, needle: '', tag: null };
+    view = { key, mode: edit ? 'edit' : 'card', pick, direct, needle: '', tag: null, onClose };
 
     const root = element('div');
     root.id = ROOT_ID;
@@ -1416,8 +1425,9 @@ export function openContacts({ pick = false, direct = false, key = null, edit = 
 }
 
 /** Opens Contacts on My Card, the persona in use. */
-export function openMyCard() {
-    openContacts({ key: `p:${personas.user_avatar}` });
+/** 从「我的」打开自己的名片；返回时交给调用方决定去哪（现在是回「我的」） */
+export function openMyCard({ onClose = null } = {}) {
+    openContacts({ key: `p:${personas.user_avatar}`, onClose });
 }
 
 /** Opens the card (or the Edit form) of the open conversation's contact or group. */

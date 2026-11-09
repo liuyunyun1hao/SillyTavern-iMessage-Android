@@ -118,30 +118,29 @@ function buildMe() {
     bar.append(element('h1', '', t('Me 我的')));
     bar.append(button('imsg-me-edit', t('Edit 编辑'), () => {
         hideMe();
-        openMyCard();
+        openMyCard({ onClose: showMe });
     }));
 
     const scroll = element('div', 'imsg-me-scroll');
     scroll.append(profile());
 
     scroll.append(group([
+        appearanceRow(),
         row({ icon: 'paintbrush', color: '#0a84ff', label: 'Backgrounds 背景', run: () => openPanel('backgrounds-button') }),
         row({ icon: 'code', color: '#ff3b30', label: 'Extensions 扩展', run: () => openPanel('extensions-settings-button') }),
-        row({ icon: 'person', color: '#af52de', label: 'Personas 角色', run: () => openPanel('persona-management-button') }),
-        row({
-            icon: 'person', color: '#34c759', label: 'Contacts 联系人',
-            run: () => { hideMe(); showContacts(); setActive('contacts'); },
-        }),
+        row({ icon: 'person', color: '#af52de', label: 'User 用户', run: () => openPanel('persona-management-button') }),
     ]));
 
     scroll.append(group([
-        row({ icon: 'sliders', color: '#5856d6', label: 'Customize… 自定义…', run: () => openCustomize() }),
-        appearanceRow(),
-        row({ icon: 'sliders', color: '#5856d6', label: 'Response Settings 响应设置', run: () => openPanel('ai-config-button') }),
-        row({ icon: 'plug', color: '#34c759', label: 'Connections 连接', run: () => openPanel('sys-settings-button') }),
-        row({ icon: 'textformat', color: '#ff9500', label: 'Formatting 格式化', run: () => openPanel('advanced-formatting-button') }),
+        row({ icon: 'plug', color: '#34c759', label: 'API 连接', run: () => openPanel('sys-settings-button') }),
         row({ icon: 'book', color: '#8e8e93', label: 'World Info 世界书', run: () => openPanel('WI-SP-button') }),
         row({ icon: 'gear', color: '#8e8e93', label: 'Settings 设置', run: () => openPanel('user-settings-button') }),
+    ]));
+
+    scroll.append(group([
+        row({ icon: 'sliders', color: '#5856d6', label: 'Beautify 美化', run: () => openCustomize() }),
+        row({ icon: 'sliders', color: '#5856d6', label: 'Response Settings 响应设置', run: () => openPanel('ai-config-button') }),
+        row({ icon: 'textformat', color: '#ff9500', label: 'Formatting 格式化', run: () => openPanel('advanced-formatting-button') }),
     ]));
 
     scroll.append(group([

@@ -183,11 +183,14 @@ body.imessage .imsg-cn-listwrap {
     display: flex;
     flex: 1;
     min-height: 0;
+    overflow: hidden;
 }
 
 body.imessage .imsg-cn-scroll {
     flex: 1;
     min-width: 0;
+    /* flex 子项默认 min-height:auto 会被内容撑高，不写这条列表就永远滚不动 */
+    min-height: 0;
     padding: 0 8px 12px;
     overflow-y: auto;
     overscroll-behavior: contain;
@@ -922,18 +925,36 @@ body.imessage .imsg-cn.imsg-cn-picking .imsg-cn-detail {
         grid-template-columns: auto 1fr auto;
     }
 
-    /* the large title, as phones show it */
+    /* 手机上的标题：和 iOS 导航栏一致，17px、水平居中，不再用超大号大标题 */
     body.imessage .imsg-cn-side .imsg-cn-title {
-        grid-row: 2;
-        grid-column: 1 / -1;
-        padding: 0 6px 6px;
-        font-size: 30px;
-        font-weight: 700;
+        position: absolute;
+        inset-inline: 0;
+        top: 0;
+        width: auto;
+        margin: 0;
+        padding: 0 62px;
+        box-sizing: border-box;
+        line-height: 52px;
+        font-size: 17px;
+        font-weight: 600;
+        text-align: center;
     }
 
+    /* 用 flex 而不是 grid：绝对定位的标题才能以整条导航栏为基准真正居中 */
     body.imessage .imsg-cn-side .imsg-cn-bar {
-        grid-template-rows: 44px auto;
-        height: auto;
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        height: 52px;
+        padding: 0 12px;
+        box-sizing: border-box;
+    }
+
+    /* 手机上窗口是 display:block，侧栏若不定高就会被内容撑高、overflow 裁掉，列表永远滚不动 */
+    body.imessage .imsg-cn-side {
+        height: 100%;
+        overflow: hidden;
     }
 
     body.imessage .imsg-cn-search {
@@ -958,8 +979,11 @@ body.imessage .imsg-cn.imsg-cn-picking .imsg-cn-detail {
         font-size: 16px;
     }
 
+    /* 详情栏标题和侧栏标题统一成 17px，并且真正居中 */
     body.imessage .imsg-cn-pane-title {
-        font-size: 16px;
+        font-size: 17px;
+        font-weight: 600;
+        text-align: center;
     }
 
     body.imessage .imsg-cn :is(input:not([type="checkbox"], [type="range"]), textarea, select) {
