@@ -18,13 +18,13 @@ body.imessage.imsg-c-liquidglass .imsg-head-actions .imsg-sym-button {
     margin-top: 0;
     border-radius: 50%;
     color: #fff;
-    background: rgba(28, 28, 30, 0.32);
+    background: rgba(118, 118, 124, 0.30);
     -webkit-backdrop-filter: blur(22px) saturate(1.8) !important;
     backdrop-filter: blur(22px) saturate(1.8) !important;
     box-shadow:
-        inset 0 0.5px 0 rgba(255, 255, 255, 0.32),
-        inset 0 0 0 0.5px rgba(255, 255, 255, 0.22),
-        0 6px 18px rgba(0, 0, 0, 0.22);
+        inset 0 0.5px 0 rgba(255, 255, 255, 0.40),
+        inset 0 0 0 0.5px rgba(255, 255, 255, 0.24),
+        0 6px 18px rgba(0, 0, 0, 0.30);
 }
 
 body.imessage.imsg-c-liquidglass #imsg-head .imsg-back:hover,
@@ -56,7 +56,7 @@ body.imessage.imsg-c-liquidglass .imsg-head-name {
     font-size: 13px;
     font-weight: 600;
     line-height: 1;
-    background: rgba(28, 28, 30, 0.38);
+    background: rgba(82, 82, 88, 0.42);
     -webkit-backdrop-filter: blur(18px) saturate(1.6) !important;
     backdrop-filter: blur(18px) saturate(1.6) !important;
     box-shadow:
