@@ -79,12 +79,6 @@ body.imessage.imsg-tabs #form_sheld {
     padding-bottom: 8px !important;
 }
 
-/* 通讯录浮层也让出底栏 */
-body.imessage.imsg-tabs .imsg-cn {
-    padding-bottom: var(--imsg-tabbar-h);
-    box-sizing: border-box;
-}
-
 /* ---------- 我的 ---------- */
 body.imessage .imsg-me {
     position: fixed;
@@ -361,7 +355,7 @@ body.imessage .imsg-cn-sort:active {
 }
 
 /* 手机进对话后不再占一条底栏，和 iOS 一样把高度还给消息 */
-body.imessage.imsg-m-chat .imsg-tabbar {
+body.imessage.imsg-m-chat .imsg-tabbar:not(.imsg-tabbar-docked) {
     display: none;
 }
 body.imessage.imsg-m-chat #sheld {
@@ -374,16 +368,14 @@ body.imessage.imsg-m-chat .imsg-cn {
 /* 全屏浮层（背景、设置面板、世界书、通讯录详情、自定义）不叠底栏，和 iOS 一样让内容占满 */
 body.imessage .imsg-cn.imsg-bg,
 body.imessage .imsg-cn.imsg-set,
-body.imessage .imsg-cn.imsg-wi,
-body.imessage:has(#imsg-contacts.imsg-cn-has-detail) .imsg-cn {
+body.imessage .imsg-cn.imsg-wi {
     padding-bottom: 0;
 }
 
 body.imessage:has(> .imsg-cn.imsg-bg) .imsg-tabbar,
 body.imessage:has(> .imsg-cn.imsg-set) .imsg-tabbar,
 body.imessage:has(> .imsg-cn.imsg-wi) .imsg-tabbar,
-body.imessage.imsg-customizing .imsg-tabbar,
-body.imessage:has(#imsg-contacts.imsg-cn-has-detail) .imsg-tabbar {
+body.imessage.imsg-customizing .imsg-tabbar {
     display: none;
 }
 

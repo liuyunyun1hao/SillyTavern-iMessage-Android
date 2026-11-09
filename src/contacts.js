@@ -48,6 +48,61 @@ let view = { key: null, mode: 'card', pick: false, direct: false, sheet: false, 
 /** Sheet mode (opened from Me) keeps a history entry so Android's back key closes it. */
 let sheetPushed = false;
 
+/*
+ * The window is a real modal: the page underneath keeps its state (chat scroll, Me scroll) instead
+ * of being hidden and rebuilt, the page itself can't scroll while the window is up, and the tab bar
+ * is moved inside the window so there is only ever one of them on screen.
+ */
+const OPEN_CLASS = 'imsg-cn-open';
+let scrollLocked = false;
+let pageScrollY = 0;
+let barHome = null;
+
+function lockPage() {
+    if (scrollLocked) {
+        return;
+    }
+    scrollLocked = true;
+    pageScrollY = window.scrollY || document.documentElement.scrollTop || 0;
+    document.documentElement.classList.add(OPEN_CLASS);
+    document.body.classList.add(OPEN_CLASS);
+}
+
+function unlockPage() {
+    if (!scrollLocked) {
+        return;
+    }
+    scrollLocked = false;
+    document.documentElement.classList.remove(OPEN_CLASS);
+    document.body.classList.remove(OPEN_CLASS);
+    // put the page back exactly where it was; overflow:hidden on its own drops the position
+    if (pageScrollY) {
+        window.scrollTo(0, pageScrollY);
+    }
+}
+
+/** Moves the one tab bar inside the window, into the window's own stacking context. */
+function dockBar(root) {
+    const bar = document.getElementById('imsg-tabbar');
+    const dock = root.querySelector('.imsg-cn-nav');
+    if (!bar || !dock) {
+        return;
+    }
+    barHome = bar.parentElement;
+    dock.append(bar);
+    bar.classList.add('imsg-tabbar-docked');
+    dock.hidden = false;
+}
+
+function undockBar() {
+    const bar = document.getElementById('imsg-tabbar');
+    if (bar && barHome) {
+        bar.classList.remove('imsg-tabbar-docked');
+        barHome.append(bar);
+    }
+    barHome = null;
+}
+
 /** Plain text, without markup or macros, cut to a length. */
 function plain(text, limit) {
     const { name1 } = context();
@@ -146,9 +201,15 @@ function letterOf(name) {
 
 // ── Doing things ──
 
+/** Tells the tab bar the app just moved into a conversation (it highlights Chat). */
+function wentToChat() {
+    document.body.dataset.imsgTab = 'chat';
+    window.dispatchEvent(new CustomEvent('imsg:tab', { detail: { key: 'chat' } }));
+}
+
 async function openConversation(item) {
     const ctx = context();
-    close();
+    close('pick');
     if (item.group) {
         if (String(ctx.groupId) === String(item.group.id)) {
             return;
@@ -159,12 +220,14 @@ async function openConversation(item) {
         document.body.append(card);
         card.click();
         card.remove();
+        wentToChat();
         return;
     }
     const id = ctx.characters.findIndex((x) => x.avatar === item.character.avatar);
     if (id !== -1 && String(ctx.characterId) !== String(id)) {
         await ctx.selectCharacterById(id, { switchMenu: false });
     }
+    wentToChat();
 }
 
 async function afterOpening(item, run) {
@@ -359,7 +422,9 @@ function buildRow(item) {
         row.append(element('span', 'imsg-cn-row-note', `${item.group.members?.length ?? 0}`));
     }
     row.addEventListener('click', () => {
-        if (view.pick || view.direct) {
+        // iOS Contacts: a tap opens the person's card, and the card's Message action starts
+        // the chat. A picker ("New Message") goes straight to the conversation.
+        if (view.pick) {
             openConversation(item);
             return;
         }
@@ -982,7 +1047,8 @@ function paneBar(title, primary, secondary) {
     const bar = element('header', 'imsg-cn-pane-bar');
     // 只留一个箭头，不再带「联系人」三个字；从「我的」进来时返回「我的」，否则退回列表
     const back = button('imsg-cn-back', 'Back 返回', () => {
-        if (view.sheet || view.onClose) {
+        // a sheet (My Card over Me) closes; the full window goes back to the list
+        if (view.sheet) {
             dismiss();
             return;
         }
@@ -1323,10 +1389,13 @@ function render() {
     }
 }
 
-function close() {
+/** Takes the window apart without telling anyone: used before opening another one. */
+function teardown() {
+    undockBar();
     document.getElementById(ROOT_ID)?.remove();
     document.removeEventListener('keydown', onKey, true);
     window.removeEventListener('popstate', onPop);
+    unlockPage();
     if (sheetPushed) {
         sheetPushed = false;
         // drop the entry we added so the next back press still leaves the app
@@ -1336,13 +1405,20 @@ function close() {
     }
 }
 
+/**
+ * Closes the window and hands control back to whoever opened it (the tab bar, Me, the chat).
+ * The reason lets the opener tell "Done" from "a contact was picked to chat with".
+ */
+function close(reason = 'done') {
+    const leave = view.onClose;
+    teardown();
+    view.onClose = null;
+    leave?.(reason);
+}
+
 /** Closes the window and hands control back to whoever opened it (Me, the chat). */
 function dismiss() {
-    const leave = view.onClose;
-    close();
-    if (leave) {
-        leave();
-    }
+    close('dismiss');
 }
 
 function onPop() {
@@ -1351,8 +1427,7 @@ function onPop() {
     }
     sheetPushed = false;
     // the browser already popped the entry, so no history.back() from close()
-    close();
-    view.onClose?.();
+    close('back');
 }
 
 function onKey(event) {
@@ -1369,7 +1444,7 @@ function onKey(event) {
         view.key = null;
         render();
     } else {
-        close();
+        close('esc');
     }
 }
 
@@ -1379,13 +1454,26 @@ function onKey(event) {
  *   opens the conversation); key: the contact to show; edit: open their Edit form.
  */
 export function openContacts({ pick = false, direct = false, key = null, edit = false, sheet = false, onClose = null } = {}) {
-    close();
+    teardown();
     view = { key, mode: edit ? 'edit' : 'card', pick, direct, sheet, needle: '', tag: null, onClose };
 
     const root = element('div');
     root.id = ROOT_ID;
     root.className = 'imsg-cn';
     root.classList.toggle('imsg-cn-sheet', view.sheet);
+    // full-screen mode: an opaque, viewport-sized surface of its own instead of a translucent
+    // page floating over whatever was open — nothing underneath may show through
+    const modal = !view.pick && !view.sheet;
+    root.classList.toggle('imsg-cn-modal', modal);
+
+    // the dimmed, blurred copy of whatever page is underneath; the window sits on top of it.
+    // a real modal covers the viewport itself, so it needs no scrim
+    const backdrop = element('div', 'imsg-cn-backdrop');
+    backdrop.addEventListener('click', () => (view.sheet ? dismiss() : close('backdrop')));
+    if (modal) {
+        backdrop.hidden = true;
+    }
+
     const win = element('div', 'imsg-cn-window');
     win.setAttribute('role', 'dialog');
     win.setAttribute('aria-modal', 'true');
@@ -1406,7 +1494,7 @@ export function openContacts({ pick = false, direct = false, key = null, edit = 
             { label: 'Import from Link…', run: importFromUrl },
         ]);
     });
-    const done = button('imsg-cn-done', pick ? 'Cancel' : 'Done', close);
+    const done = button('imsg-cn-done', pick ? 'Cancel' : 'Done', () => close(pick ? 'cancel' : 'done'));
     const sort = button('imsg-cn-sort', view.sort === 'recent' ? '最近' : 'A–Z', () => {
         view.sort = view.sort === 'recent' ? 'name' : 'recent';
         sort.textContent = view.sort === 'recent' ? '最近' : 'A–Z';
@@ -1446,13 +1534,11 @@ export function openContacts({ pick = false, direct = false, key = null, edit = 
     side.append(bar, searchBox, tags, listWrap);
 
     const detail = element('section', 'imsg-cn-detail');
-    win.append(side, detail);
-    root.append(win);
-    root.addEventListener('mousedown', (event) => {
-        if (event.target === root) {
-            view.sheet ? dismiss() : close();
-        }
-    });
+    // the tab bar lives here (moved in on open) instead of floating above the window
+    const nav = element('div', 'imsg-cn-nav');
+    nav.hidden = true;
+    win.append(side, detail, nav);
+    root.append(backdrop, win);
     document.body.append(root);
     document.addEventListener('keydown', onKey, true);
     render();
@@ -1460,6 +1546,12 @@ export function openContacts({ pick = false, direct = false, key = null, edit = 
         history.pushState({ imsgSheet: true }, '');
         sheetPushed = true;
         window.addEventListener('popstate', onPop);
+    } else {
+        lockPage();
+        // a picker ("New Message") keeps the bar out of the way, as before
+        if (!view.pick && isPhone()) {
+            dockBar(root);
+        }
     }
     // 手机上打开通讯录不自动弹键盘，点搜索框才聚焦；桌面保留直接输入
     if (!edit && !isPhone()) {
@@ -1471,6 +1563,15 @@ export function openContacts({ pick = false, direct = false, key = null, edit = 
 /** 从「我的」打开自己的名片；返回时交给调用方决定去哪（现在是回「我的」） */
 export function openMyCard({ onClose = null, sheet = false } = {}) {
     openContacts({ key: `p:${personas.user_avatar}`, sheet, onClose });
+}
+
+/** Closes the window from outside (a tab tap); the reason tells the opener not to put the tab back. */
+export function closeContacts() {
+    if (!document.getElementById(ROOT_ID)) {
+        return false;
+    }
+    close('tab');
+    return true;
 }
 
 /** Opens the card (or the Edit form) of the open conversation's contact or group. */

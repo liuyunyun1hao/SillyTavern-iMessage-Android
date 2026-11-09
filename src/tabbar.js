@@ -4,7 +4,7 @@
 
 import * as personas from '../../../../personas.js';
 import { button, element, glyph, setPicture, t } from './dom.js';
-import { openContacts, openMyCard } from './contacts.js';
+import { closeContacts, openContacts, openMyCard } from './contacts.js';
 import { monogramize } from './monograms.js';
 import { openCustomize } from './customize.js';
 import { clickOption, openAppearanceMenu, openPanelById } from './shell.js';
@@ -29,17 +29,27 @@ function setActive(key) {
     }
 }
 
-/** Switches page and highlights its tab. Everything that changes pages goes through here. */
+/** Which tab was showing when Contacts was opened, so closing it can put that tab back. */
+let contactsFrom = 'chat';
+
+/**
+ * Switches page and highlights its tab. Everything that changes pages goes through here.
+ * Contacts is a modal, not a page: the page below it is never hidden, only covered.
+ */
 function activateTab(key) {
+    if (key === 'contacts') {
+        if (document.body.dataset.imsgTab !== 'contacts') {
+            contactsFrom = document.body.dataset.imsgTab === 'me' ? 'me' : 'chat';
+        }
+        showContacts();
+        setActive('contacts');
+        return;
+    }
+    closeContacts();
     if (key === 'chat') {
         hideMe();
-        hideContacts();
         document.body.classList.remove('imsg-m-chat');
-    } else if (key === 'contacts') {
-        hideMe();
-        showContacts();
     } else {
-        hideContacts();
         showMe();
     }
     setActive(key);
@@ -59,7 +69,7 @@ function restoreTab() {
     activateTab(key);
 }
 
-/* ── 联系人页：复用插件的通讯录，点一行直接进对话 ── */
+/* ── 联系人：全屏弹窗，复用插件的通讯录，点一行直接进对话 ── */
 
 function showContacts() {
     const root = document.getElementById(CN_ID);
@@ -67,11 +77,23 @@ function showContacts() {
         root.classList.remove(HIDDEN);
         return;
     }
-    openContacts({ direct: true });
-}
-
-function hideContacts() {
-    document.getElementById(CN_ID)?.classList.add(HIDDEN);
+    openContacts({
+        direct: true,
+        onClose: (reason) => {
+            // the window is already gone here; decide where the tab bar points next
+            if (reason === 'tab') {
+                return;
+            }
+            if (reason === 'pick') {
+                activateTab('chat');
+                return;
+            }
+            setActive(contactsFrom);
+            if (contactsFrom === 'me') {
+                showMe();
+            }
+        },
+    });
 }
 
 /* ── 我的 ── */
@@ -251,44 +273,26 @@ function build() {
     setActive('chat');
 }
 
-function watch() {
-    // 通讯录被关掉（Done / 点空白 / 选了人开始聊天 / Esc）时，底栏回到「聊天」
-    const back = () => setTimeout(() => {
-        if (document.body.dataset.imsgTab === 'contacts' && !document.getElementById(CN_ID)) {
-            setActive('chat');
-        }
-    }, 0);
-
-    document.addEventListener('click', (event) => {
-        const target = event.target;
-        if (target.closest?.('.imsg-cn-done') || target.closest?.('.imsg-cn-row')) {
-            back();
-        } else if (target.classList?.contains('imsg-cn')) {
-            setActive('chat');
-        }
-    }, true);
-
-    document.addEventListener('keydown', (event) => {
-        if (event.key !== 'Escape') return;
-        if (document.getElementById(ME_ID) && !document.getElementById(ME_ID).classList.contains(HIDDEN)) {
-            hideMe();
-            setActive(document.getElementById(CN_ID) && !document.getElementById(CN_ID).classList.contains(HIDDEN) ? 'contacts' : 'chat');
-            return;
-        }
-        back();
-    });
+/** Contacts can hand the app over to a conversation without going through activateTab. */
+function onTabEvent(event) {
+    if (event?.detail?.key) {
+        setActive(event.detail.key);
+    }
 }
 
 export function initTabbar() {
     // 只登记一次：开主题时建，关主题时拆，重新开启还能回来
-    watch();
     onStart(() => {
         if (!document.getElementById(BAR_ID)) {
             build();
         }
+        window.addEventListener('imsg:tab', onTabEvent);
         restoreTab();
     });
-    onStop(removeTabbar);
+    onStop(() => {
+        window.removeEventListener('imsg:tab', onTabEvent);
+        removeTabbar();
+    });
 }
 
 export function removeTabbar() {

@@ -11,6 +11,7 @@ body.imessage {
     --g26-glass-strong: rgba(255, 255, 255, 0.72);
     --g26-sheet: rgba(255, 255, 255, 0.66);
     --g26-page: rgba(244, 244, 247, 0.62);
+    --g26-page-solid: #f5f5f7;
     --g26-solid: rgba(250, 250, 252, 0.97);
     --g26-hi: rgba(255, 255, 255, 0.7);
     --g26-hair: rgba(0, 0, 0, 0.055);
@@ -24,6 +25,7 @@ body.imessage.imsg-dark {
     --g26-glass-strong: rgba(52, 52, 58, 0.66);
     --g26-sheet: rgba(38, 38, 44, 0.72);
     --g26-page: rgba(14, 14, 17, 0.66);
+    --g26-page-solid: #121216;
     --g26-solid: rgba(32, 32, 38, 0.98);
     --g26-hi: rgba(255, 255, 255, 0.16);
     --g26-hair: rgba(255, 255, 255, 0.09);
@@ -137,17 +139,21 @@ body.imessage .imsg-me-ico {
     box-shadow: inset 0 0.5px 0 rgba(255, 255, 255, 0.35), 0 1px 3px rgba(0, 0, 0, 0.18);
 }
 
-/* ── 面板（联系人 / 背景 / 设置 / 世界书 / 扩展 / 美化）：窗体和导航栏都是玻璃 ── */
+/* ── 联系人 / 背景 / 设置 / 世界书 / 扩展 / 美化：整块玻璃窗体 ── */
 
-body.imessage .imsg-cn {
+/* the backdrop is its own blurred layer; the window above it is opaque enough that the page
+   underneath never shows through, so nothing "leaks" at the bottom or through the list */
+body.imessage .imsg-cn-backdrop {
     background: rgba(0, 0, 0, 0.3);
-    -webkit-backdrop-filter: blur(12px) saturate(1.2);
-    backdrop-filter: blur(12px) saturate(1.2);
+    -webkit-backdrop-filter: blur(24px) saturate(1.3);
+    backdrop-filter: blur(24px) saturate(1.3);
 }
 
 body.imessage .imsg-cn-window {
-    border-radius: 20px;
-    background: var(--g26-page);
+    border-radius: 22px;
+    background: var(--g26-page-solid, var(--g26-page));
+    -webkit-backdrop-filter: blur(40px) saturate(var(--g26-sat));
+    backdrop-filter: blur(40px) saturate(var(--g26-sat));
     box-shadow: var(--g26-shadow-xl), inset 0 0.5px 0 var(--g26-hi);
 }
 
@@ -188,11 +194,33 @@ body.imessage .imsg-cn-row.imsg-cn-current {
     background: var(--imsg-selected-quiet);
 }
 
+/* iOS 的分组标题是轻量的小字，不是一条白色横条 */
+body.imessage .imsg-cn-section-title {
+    background: none;
+    color: var(--imsg-label);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+}
+
 body.imessage .imsg-cn-card,
 body.imessage .imsg-cn-group,
 body.imessage .imsg-cn-member,
 body.imessage .imsg-cn-form .imsg-cn-card {
     border-radius: 16px;
+}
+
+/* the tab bar docked inside the window: one bar, in the window's layer */
+body.imessage .imsg-cn-nav {
+    background: transparent;
+}
+
+body.imessage .imsg-tabbar.imsg-tabbar-docked {
+    background: var(--g26-glass-strong);
+    -webkit-backdrop-filter: blur(30px) saturate(var(--g26-sat));
+    backdrop-filter: blur(30px) saturate(var(--g26-sat));
+    border: 0.5px solid var(--g26-edge);
+    box-shadow: var(--g26-shadow), inset 0 0.5px 0 var(--g26-hi);
 }
 
 /* ── 用户名片弹窗（Sheet）：圆角玻璃，底层「我的」原样留在下面 ── */
@@ -387,5 +415,349 @@ body.imessage .imsg-list-body {
 
     #imsg-customize .imsg-cz-body {
         border-radius: 0;
+    }
+}
+
+/* ── 手机：联系人弹窗是一整块不透明玻璃面，聊天页只在遮罩层里被模糊掉 ── */
+
+@media screen and (max-width: 1000px) {
+    /* the sheet itself is opaque; the layer under it stays a controlled blurred scrim, so the
+       slide-up reads as iOS instead of a hard flash of white */
+    body.imessage .imsg-cn-backdrop {
+        background: rgba(0, 0, 0, 0.18);
+        -webkit-backdrop-filter: blur(22px) saturate(1.2);
+        backdrop-filter: blur(22px) saturate(1.2);
+    }
+
+    body.imessage .imsg-cn-window,
+    body.imessage .imsg-cn-detail {
+        background: var(--g26-page-solid);
+        /* a full-screen sheet runs edge to edge; rounded corners would leak the scrim at the
+           bottom of the screen */
+        border-radius: 0;
+    }
+}
+
+/* ── 联系人：搜索框做成 iOS 26 的胶囊玻璃，分组标题随滚动浮起时用页面底色托住 ── */
+
+body.imessage .imsg-cn-search {
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.55);
+    border: 0.5px solid var(--g26-edge);
+    -webkit-backdrop-filter: blur(18px) saturate(var(--g26-sat));
+    backdrop-filter: blur(18px) saturate(var(--g26-sat));
+    box-shadow: inset 0 0.5px 0 var(--g26-hi), 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+
+body.imessage.imsg-dark .imsg-cn-search {
+    background: rgba(255, 255, 255, 0.1);
+    box-shadow: inset 0 0.5px 0 var(--g26-hi);
+}
+
+@media screen and (max-width: 1000px) {
+    /* sticky section labels need an opaque plate, or rows scroll visibly through them */
+    body.imessage .imsg-cn-section-title {
+        background: var(--g26-page-solid);
+    }
+}
+
+/* ── 联系人：手机上是一块独立的全屏 Modal（iOS 26 分组列表 + 玻璃导航），不再叠在页面上 ──
+   规则都挂在 .imsg-cn-modal 上：桌面端仍是居中双栏窗口，New Message 选择器和「我的」名片
+   也各自走自己的形态，互不影响。 */
+
+body.imessage {
+    --imsg-modal-page: #f2f2f7;
+    --imsg-modal-card: rgba(255, 255, 255, 0.82);
+    --imsg-modal-top: rgba(255, 255, 255, 0.62);
+    --imsg-modal-glow: rgba(255, 255, 255, 0.9);
+}
+
+body.imessage.imsg-dark {
+    --imsg-modal-page: #0b0b0f;
+    --imsg-modal-card: rgba(255, 255, 255, 0.075);
+    --imsg-modal-top: rgba(255, 255, 255, 0.06);
+    --imsg-modal-glow: rgba(255, 255, 255, 0.16);
+}
+
+@media screen and (max-width: 1000px) {
+    /* the surface itself: fixed to the viewport, its own stacking context, no page scroll
+       underneath. dvh follows the collapsing URL bar; svh keeps the first paint covered. */
+    body.imessage .imsg-cn.imsg-cn-modal {
+        position: fixed;
+        inset: 0;
+        z-index: 6000;
+        display: flex;
+        align-items: stretch;
+        justify-content: stretch;
+        width: auto;
+        height: 100vh;
+        height: 100dvh;
+        min-height: 100svh;
+        max-height: 100dvh;
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+        background: var(--imsg-modal-page);
+        isolation: isolate;
+        overscroll-behavior: contain;
+    }
+
+    body.imessage .imsg-cn.imsg-cn-modal .imsg-cn-backdrop {
+        display: none;
+    }
+
+    /* one opaque sheet: a soft top glow + the page tint, edge to edge. cover rather than a
+        translucent panel is what stops chat bubbles from bleeding through the bottom. */
+    body.imessage .imsg-cn.imsg-cn-modal .imsg-cn-window {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        height: 100%;
+        max-height: none;
+        border-radius: 0;
+        background:
+            radial-gradient(140% 42% at 50% -12%, var(--imsg-modal-glow), transparent 62%),
+            var(--imsg-modal-page);
+        box-shadow: none;
+        animation: imsg-cn-modal-in 0.34s cubic-bezier(0.32, 0.72, 0, 1);
+    }
+
+    @keyframes imsg-cn-modal-in {
+        from {
+            opacity: 0.6;
+            transform: translateY(28px) scale(0.985);
+        }
+    }
+
+    body.imessage .imsg-cn.imsg-cn-modal .imsg-cn-side {
+        flex: 1 1 auto;
+        min-height: 0;
+        padding-top: env(safe-area-inset-top);
+        background: transparent;
+    }
+
+    /* navigation bar: Done | title | sort + add, one row, hairline under it */
+    body.imessage .imsg-cn.imsg-cn-modal .imsg-cn-bar {
+        position: relative;
+        display: grid;
+        grid-template-columns: minmax(64px, 1fr) auto minmax(64px, 1fr);
+        align-items: center;
+        column-gap: 6px;
+        height: auto;
+        min-height: 50px;
+        padding: 0 10px 0 6px;
+        background: linear-gradient(180deg, var(--imsg-modal-top), transparent);
+        border-bottom: 0.5px solid var(--imsg-line);
+    }
+
+    body.imessage .imsg-cn.imsg-cn-modal .imsg-cn-title {
+        position: absolute;
+        left: 50%;
+        top: 0;
+        margin: 0 !important;
+        padding: 0;
+        transform: translateX(-50%);
+        text-align: center;
+        font-size: 17px;
+        font-weight: 600;
+        letter-spacing: -0.2px;
+        line-height: 50px;
+        white-space: nowrap;
+        pointer-events: none;
+    }
+
+    /* iOS text button, not a grey chip */
+    body.imessage .imsg-cn.imsg-cn-modal .imsg-cn-done {
+        grid-area: 1 / 1 / 2 / 2;
+        justify-self: start;
+        height: 44px;
+        padding: 0 10px;
+        background: none;
+        border-radius: 10px;
+        color: var(--imsg-blue);
+        font-size: 17px;
+        font-weight: 400;
+    }
+
+    body.imessage .imsg-cn.imsg-cn-modal .imsg-cn-tools {
+        grid-area: 1 / 3 / 2 / 4;
+        justify-self: end;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    body.imessage .imsg-cn.imsg-cn-modal :is(.imsg-cn-sort, .imsg-cn-add-menu) {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 34px;
+        height: 30px;
+        padding: 0 9px;
+        border: 0.5px solid var(--imsg-line);
+        border-radius: 999px;
+        background: var(--imsg-modal-card);
+        color: var(--imsg-fg);
+        font-size: 13px;
+        font-weight: 500;
+    }
+
+    /* search: a quiet translucent capsule, not a heavy grey block */
+    body.imessage .imsg-cn.imsg-cn-modal .imsg-cn-search {
+        margin: 8px 12px 2px;
+        height: 38px;
+        padding: 0 12px;
+        gap: 6px;
+        border: 0.5px solid var(--imsg-line);
+        border-radius: 12px;
+        background: var(--imsg-modal-card);
+        box-shadow: inset 0 0.5px 0 var(--imsg-modal-glow);
+        -webkit-backdrop-filter: blur(20px) saturate(1.8);
+        backdrop-filter: blur(20px) saturate(1.8);
+    }
+
+    body.imessage .imsg-cn.imsg-cn-modal .imsg-cn-search input {
+        font-size: 16px;
+        background: transparent;
+    }
+
+    body.imessage .imsg-cn.imsg-cn-modal .imsg-cn-search .imsg-glyph {
+        width: 15px;
+        height: 15px;
+        color: var(--imsg-fg-2);
+    }
+
+    /* grouped list: a light label per group, then one rounded card of joined rows */
+    body.imessage .imsg-cn.imsg-cn-modal .imsg-cn-section {
+        margin: 0 12px 12px;
+        background: none;
+    }
+
+    body.imessage .imsg-cn.imsg-cn-modal .imsg-cn-section-title {
+        position: static;
+        top: auto;
+        z-index: auto;
+        margin: 0;
+        padding: 18px 14px 6px 16px;
+        background: none;
+        font-size: 12.5px;
+        font-weight: 500;
+        letter-spacing: 0.03em;
+        text-transform: none;
+        color: var(--imsg-fg-2);
+    }
+
+    body.imessage .imsg-cn.imsg-cn-modal .imsg-cn-row {
+        min-height: 60px;
+        padding: 0 14px;
+        gap: 12px;
+        border-radius: 0;
+        background: var(--imsg-modal-card);
+        font-size: 17px;
+    }
+
+    body.imessage .imsg-cn.imsg-cn-modal .imsg-cn-row + .imsg-cn-row {
+        box-shadow: inset 0 0.5px 0 var(--imsg-line);
+    }
+
+    body.imessage .imsg-cn.imsg-cn-modal .imsg-cn-section .imsg-cn-row:first-of-type {
+        border-radius: 14px 14px 0 0;
+    }
+
+    body.imessage .imsg-cn.imsg-cn-modal .imsg-cn-section .imsg-cn-row:last-of-type {
+        border-radius: 0 0 14px 14px;
+    }
+
+    body.imessage .imsg-cn.imsg-cn-modal .imsg-cn-section .imsg-cn-row:only-of-type {
+        border-radius: 14px;
+    }
+
+    body.imessage .imsg-cn.imsg-cn-modal .imsg-cn-row .imsg-avatar.imsg-cn-pic {
+        flex: none;
+        --imsg-cn-pic: 44px !important;
+    }
+
+    body.imessage .imsg-cn.imsg-cn-modal .imsg-cn-row-name {
+        font-size: 17px;
+        letter-spacing: -0.2px;
+    }
+
+    body.imessage .imsg-cn.imsg-cn-modal .imsg-cn-row-name b {
+        font-weight: 500;
+    }
+
+    body.imessage .imsg-cn.imsg-cn-modal .imsg-cn-row small,
+    body.imessage .imsg-cn.imsg-cn-modal .imsg-cn-row .imsg-cn-sub {
+        font-size: 14px;
+        color: var(--imsg-fg-2);
+    }
+
+    body.imessage .imsg-cn.imsg-cn-modal .imsg-cn-scroll {
+        padding: 0 0 6px;
+    }
+
+    /* the "my card" row sits outside the letter groups: give it its own rounded card */
+    body.imessage .imsg-cn.imsg-cn-modal .imsg-cn-scroll > .imsg-cn-row {
+        margin: 8px 12px 10px;
+        border-radius: 14px;
+        background: var(--imsg-modal-card);
+    }
+
+    /* letter rail: slim, blue, clear of the rows */
+    body.imessage .imsg-cn.imsg-cn-modal .imsg-cn-index {
+        width: 18px;
+        margin: 0 2px 0 0;
+        padding: 6px 0 30px;
+        font-size: 10.5px;
+        color: var(--imsg-blue);
+    }
+
+    /* the one tab bar: docked in the modal's own column, above the home indicator */
+    body.imessage .imsg-cn.imsg-cn-modal .imsg-cn-nav:not([hidden]) {
+        position: relative;
+        z-index: 4;
+        display: block;
+        flex: none;
+        padding: 6px 12px calc(6px + env(safe-area-inset-bottom));
+        background: linear-gradient(180deg, transparent, var(--imsg-modal-page) 42%);
+    }
+
+    body.imessage .imsg-cn.imsg-cn-modal .imsg-tabbar.imsg-tabbar-docked {
+        position: relative;
+        left: auto;
+        right: auto;
+        bottom: auto;
+        height: 58px;
+        padding-bottom: 0;
+        border: 0.5px solid var(--imsg-line);
+        border-radius: 29px;
+        box-sizing: border-box;
+        background: var(--imsg-modal-card);
+        -webkit-backdrop-filter: blur(26px) saturate(1.9);
+        backdrop-filter: blur(26px) saturate(1.9);
+        box-shadow: inset 0 0.5px 0 var(--imsg-modal-glow), 0 8px 24px rgba(0, 0, 0, 0.1);
+    }
+
+    /* the card slides over the list, inset so the docked bar keeps its own row */
+    body.imessage .imsg-cn.imsg-cn-modal .imsg-cn-detail {
+        position: absolute;
+        inset: 0;
+        z-index: 2;
+        padding-top: env(safe-area-inset-top);
+        background: var(--imsg-modal-page);
+        box-shadow: none;
+    }
+
+    /* safety net: never two bars at once, even if a tab was left behind */
+    body.imessage.imsg-cn-open > .imsg-tabbar {
+        display: none !important;
+    }
+}
+
+@media screen and (max-width: 1000px) and (prefers-reduced-motion: reduce) {
+    body.imessage .imsg-cn.imsg-cn-modal .imsg-cn-window {
+        animation: none;
     }
 }
