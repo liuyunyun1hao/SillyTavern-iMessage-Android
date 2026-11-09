@@ -8,7 +8,7 @@ import { openWorldInfo } from './worldinfo.js';
 import { openExtensions } from './addons.js';
 import { openConnections, openFormatting, openResponseSettings, openSettings } from './settings.js';
 import { buildMonogram, monogramize } from './monograms.js';
-import { events, onStart, whenOn } from './power.js';
+import { events, isOn, onStart, whenOn } from './power.js';
 import { button, glyph, isPhone, setPicture, t } from './dom.js';
 
 const HEADER_ID = 'imsg-head';
@@ -146,6 +146,59 @@ export function newMessage() {
     openContacts({ pick: true });
 }
 
+/** 输入框左侧的加号：直接开主题自己的菜单。
+ *  酒馆原生 #options_button 在部分安卓浏览器里会因为「点击后没有 :hover」被它自己收起，
+ *  这里不再经过它，而是用和右上角 ⓘ 完全一样的那份聊天选项。 */
+let plusHandledAt = 0;
+let plusDown = null;
+
+function watchComposerPlus() {
+    const left = document.getElementById('leftSendForm');
+    const button = document.getElementById('options_button');
+    if (!left) {
+        return;
+    }
+    if (button) {
+        button.setAttribute('role', 'button');
+        button.setAttribute('aria-label', t('Chat Options 聊天选项'));
+        button.setAttribute('title', t('Chat Options 聊天选项'));
+    }
+    if (left.dataset.imsgPlus === '1') {
+        return;
+    }
+    left.dataset.imsgPlus = '1';
+    left.addEventListener('pointerdown', (event) => {
+        plusDown = { x: event.clientX, y: event.clientY, at: performance.now() };
+    }, true);
+    const open = (event) => {
+        if (!isOn()) {
+            return;
+        }
+        // 一律挡下来：酒馆原生菜单不参与，避免两个菜单互相打架
+        event.preventDefault();
+        event.stopPropagation();
+        event.stopImmediatePropagation();
+        if (event.type === 'pointerup') {
+            const moved = plusDown && Math.hypot(event.clientX - plusDown.x, event.clientY - plusDown.y);
+            if (!plusDown || moved > 12 || performance.now() - plusDown.at > 700) {
+                return;
+            }
+        }
+        const now = performance.now();
+        if (now - plusHandledAt < 420) {
+            return;
+        }
+        plusHandledAt = now;
+        const items = chatOptionItems();
+        if (items.length) {
+            toggleMenu(left, items);
+        }
+    };
+    // pointerup 在前：个别套壳 WebView 里这层 div 不一定收到 click，pointerup 一定会有
+    left.addEventListener('pointerup', open, true);
+    left.addEventListener('click', open, true);
+}
+
 function closeMenu() {
     const menu = document.getElementById(MENU_ID);
     if (menu) {
@@ -242,6 +295,7 @@ export function toggleMenu(anchor, items, point) {
     if (top + height > window.innerHeight - 8) {
         top = Math.max(8, (point ? point.y : box.top - 4) - height);
     }
+    top = Math.max(8, Math.min(top, window.innerHeight - height - 8));
     menu.style.left = `${Math.round(left)}px`;
     menu.style.top = `${Math.round(top)}px`;
     /** @type {HTMLElement} */ (menu.querySelector('.imsg-menu-item'))?.focus({ preventScroll: true });
@@ -549,6 +603,7 @@ export function initShell(options) {
         clusterGroupRows();
         markAlerts();
         createHeader();
+        watchComposerPlus();
         createEmptyState();
         createPanelHeads();
         updateDrawers();

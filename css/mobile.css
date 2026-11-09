@@ -243,7 +243,15 @@
         font-weight: 600;
     }
 
-    body.imessage #imsg-menu:not([hidden]) { min-width: 240px; padding: 0; border-radius: 13px; overflow: hidden; }
+        body.imessage #imsg-menu:not([hidden]) {
+        min-width: 240px;
+        padding: 0;
+        border-radius: 13px;
+        overflow: hidden auto;
+        /* 聊天选项有十几项，矮屏上要能滚，不能顶出屏幕 */
+        max-height: calc(100dvh - 150px);
+        overscroll-behavior: contain;
+    }
     body.imessage .imsg-menu-item { min-height: 44px; padding: 10px 16px; border-radius: 0; font-size: 17px; line-height: 22px; }
     body.imessage .imsg-menu-item + .imsg-menu-item { box-shadow: inset 0 0.5px 0 var(--imsg-line-strong); }
     body.imessage .imsg-menu-item:hover { background: none; color: var(--imsg-fg); }
