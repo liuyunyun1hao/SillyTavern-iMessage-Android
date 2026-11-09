@@ -380,6 +380,10 @@ function close() {
     document.removeEventListener('keydown', onKey, true);
     // as ST's own Manage Extensions does: the changes are saved, a reload applies them
     if (needsReload) {
+        // the page boots on Chat; tell the tab bar to come back to Me after the reload
+        if (document.body.dataset.imsgTab === 'me') {
+            sessionStorage.setItem('imsg-return-tab', 'me');
+        }
         location.reload();
     }
 }

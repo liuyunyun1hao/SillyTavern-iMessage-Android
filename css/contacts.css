@@ -938,6 +938,8 @@ body.imessage .imsg-cn.imsg-cn-picking .imsg-cn-detail {
         font-size: 17px;
         font-weight: 600;
         text-align: center;
+        /* 绝对定位的标题横跨整条栏，不能挡住左边「完成」的点击 */
+        pointer-events: none;
     }
 
     /* 用 flex 而不是 grid：绝对定位的标题才能以整条导航栏为基准真正居中 */

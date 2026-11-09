@@ -14,6 +14,7 @@ const BAR_ID = 'imsg-tabbar';
 const ME_ID = 'imsg-me';
 const CN_ID = 'imsg-contacts';
 const HIDDEN = 'imsg-hidden';
+const RETURN_KEY = 'imsg-return-tab';
 
 const TABS = [
     { key: 'chat', label: 'Chat 聊天', symbol: 'bubble' },
@@ -26,6 +27,36 @@ function setActive(key) {
     for (const tab of document.querySelectorAll(`#${BAR_ID} .imsg-tab`)) {
         tab.classList.toggle('imsg-tab-on', tab.dataset.tab === key);
     }
+}
+
+/** Switches page and highlights its tab. Everything that changes pages goes through here. */
+function activateTab(key) {
+    if (key === 'chat') {
+        hideMe();
+        hideContacts();
+        document.body.classList.remove('imsg-m-chat');
+    } else if (key === 'contacts') {
+        hideMe();
+        showContacts();
+    } else {
+        hideContacts();
+        showMe();
+    }
+    setActive(key);
+}
+
+/** After a reload the page always boots on Chat; come back to where the user was. */
+function rememberTab() {
+    sessionStorage.setItem(RETURN_KEY, 'me');
+}
+
+function restoreTab() {
+    const key = sessionStorage.getItem(RETURN_KEY);
+    if (!key) {
+        return;
+    }
+    sessionStorage.removeItem(RETURN_KEY);
+    activateTab(key);
 }
 
 /* ── 联系人页：复用插件的通讯录，点一行直接进对话 ── */
@@ -116,10 +147,7 @@ function buildMe() {
 
     const bar = element('header', 'imsg-me-bar');
     bar.append(element('h1', '', t('Me 我的')));
-    bar.append(button('imsg-me-edit', t('Edit 编辑'), () => {
-        hideMe();
-        openMyCard({ onClose: showMe });
-    }));
+    bar.append(button('imsg-me-edit', t('Edit 编辑'), () => openMyCard({ sheet: true, onClose: showMe })));
 
     const scroll = element('div', 'imsg-me-scroll');
     scroll.append(profile());
@@ -128,7 +156,8 @@ function buildMe() {
         appearanceRow(),
         row({ icon: 'paintbrush', color: '#0a84ff', label: 'Backgrounds 背景', run: () => openPanel('backgrounds-button') }),
         row({ icon: 'code', color: '#ff3b30', label: 'Extensions 扩展', run: () => openPanel('extensions-settings-button') }),
-        row({ icon: 'person', color: '#af52de', label: 'User 用户', run: () => openPanel('persona-management-button') }),
+        // 用户设置开在弹窗里，「我的」一直留在底层，关掉还回这里
+        row({ icon: 'person', color: '#af52de', label: 'User 用户', run: () => openMyCard({ sheet: true, onClose: showMe }) }),
     ]));
 
     scroll.append(group([
@@ -214,20 +243,7 @@ function build() {
         node.dataset.tab = tab.key;
         node.setAttribute('role', 'tab');
         node.append(glyph(tab.symbol), element('span', '', t(tab.label)));
-        node.addEventListener('click', () => {
-            if (tab.key === 'chat') {
-                hideMe();
-                hideContacts();
-                document.body.classList.remove('imsg-m-chat');
-            } else if (tab.key === 'contacts') {
-                hideMe();
-                showContacts();
-            } else {
-                hideContacts();
-                showMe();
-            }
-            setActive(tab.key);
-        });
+        node.addEventListener('click', () => activateTab(tab.key));
         bar.append(node);
     }
     document.body.append(bar);
@@ -270,6 +286,7 @@ export function initTabbar() {
         if (!document.getElementById(BAR_ID)) {
             build();
         }
+        restoreTab();
     });
     onStop(removeTabbar);
 }

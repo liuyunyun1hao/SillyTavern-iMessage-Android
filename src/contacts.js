@@ -43,7 +43,10 @@ const GENERATION_MODES = [
 ];
 
 /** What's on screen: the selection, the mode and the search */
-let view = { key: null, mode: 'card', pick: false, direct: false, needle: '', tag: null, sort: 'name' };
+let view = { key: null, mode: 'card', pick: false, direct: false, sheet: false, needle: '', tag: null, sort: 'name', onClose: null };
+
+/** Sheet mode (opened from Me) keeps a history entry so Android's back key closes it. */
+let sheetPushed = false;
 
 /** Plain text, without markup or macros, cut to a length. */
 function plain(text, limit) {
@@ -979,10 +982,8 @@ function paneBar(title, primary, secondary) {
     const bar = element('header', 'imsg-cn-pane-bar');
     // 只留一个箭头，不再带「联系人」三个字；从「我的」进来时返回「我的」，否则退回列表
     const back = button('imsg-cn-back', 'Back 返回', () => {
-        if (view.onClose) {
-            const leave = view.onClose;
-            close();
-            leave();
+        if (view.sheet || view.onClose) {
+            dismiss();
             return;
         }
         view.key = null;
@@ -992,7 +993,14 @@ function paneBar(title, primary, secondary) {
     back.textContent = '';
     back.prepend(glyph('chevron-left'));
     back.setAttribute('aria-label', t('Back 返回'));
-    bar.append(secondary ?? back, element('h2', 'imsg-cn-pane-title', title ?? ''), primary ?? element('span'));
+    const heading = element('h2', 'imsg-cn-pane-title', title ?? '');
+    // 弹窗里用右上角的「完成」关闭；只有表单才有主按钮（保存）
+    if (view.sheet && !primary?.classList?.contains('imsg-cn-save')) {
+        const done = button('imsg-cn-done imsg-sheet-done', t('Done 完成'), dismiss);
+        bar.append(element('span'), heading, done);
+        return bar;
+    }
+    bar.append(secondary ?? (view.sheet ? element('span') : back), heading, primary ?? element('span'));
     return bar;
 }
 
@@ -1295,7 +1303,7 @@ function render() {
     if (view.key && !item && !view.key.startsWith('new:')) {
         view.key = null;
     }
-    root.classList.toggle('imsg-cn-has-detail', !!view.key);
+    root.classList.toggle('imsg-cn-has-detail', !!view.key || view.sheet);
     if (view.key === 'new:c') {
         renderCharacterForm(pane, null);
     } else if (view.key === 'new:p') {
@@ -1318,6 +1326,33 @@ function render() {
 function close() {
     document.getElementById(ROOT_ID)?.remove();
     document.removeEventListener('keydown', onKey, true);
+    window.removeEventListener('popstate', onPop);
+    if (sheetPushed) {
+        sheetPushed = false;
+        // drop the entry we added so the next back press still leaves the app
+        if (history.state?.imsgSheet) {
+            history.back();
+        }
+    }
+}
+
+/** Closes the window and hands control back to whoever opened it (Me, the chat). */
+function dismiss() {
+    const leave = view.onClose;
+    close();
+    if (leave) {
+        leave();
+    }
+}
+
+function onPop() {
+    if (!document.getElementById(ROOT_ID) || !view.sheet) {
+        return;
+    }
+    sheetPushed = false;
+    // the browser already popped the entry, so no history.back() from close()
+    close();
+    view.onClose?.();
 }
 
 function onKey(event) {
@@ -1328,6 +1363,8 @@ function onKey(event) {
     const root = document.getElementById(ROOT_ID);
     if (view.mode === 'edit' || view.key?.startsWith('new:')) {
         root?.querySelector('.imsg-cn-pane-bar .imsg-cn-cancel')?.click();
+    } else if (view.sheet) {
+        dismiss();
     } else if (root?.classList.contains('imsg-cn-has-detail') && isPhone()) {
         view.key = null;
         render();
@@ -1341,13 +1378,14 @@ function onKey(event) {
  * @param {{ pick?: boolean, key?: string, edit?: boolean }} [options] pick: New Message (a tap
  *   opens the conversation); key: the contact to show; edit: open their Edit form.
  */
-export function openContacts({ pick = false, direct = false, key = null, edit = false, onClose = null } = {}) {
+export function openContacts({ pick = false, direct = false, key = null, edit = false, sheet = false, onClose = null } = {}) {
     close();
-    view = { key, mode: edit ? 'edit' : 'card', pick, direct, needle: '', tag: null, onClose };
+    view = { key, mode: edit ? 'edit' : 'card', pick, direct, sheet, needle: '', tag: null, onClose };
 
     const root = element('div');
     root.id = ROOT_ID;
     root.className = 'imsg-cn';
+    root.classList.toggle('imsg-cn-sheet', view.sheet);
     const win = element('div', 'imsg-cn-window');
     win.setAttribute('role', 'dialog');
     win.setAttribute('aria-modal', 'true');
@@ -1412,12 +1450,17 @@ export function openContacts({ pick = false, direct = false, key = null, edit = 
     root.append(win);
     root.addEventListener('mousedown', (event) => {
         if (event.target === root) {
-            close();
+            view.sheet ? dismiss() : close();
         }
     });
     document.body.append(root);
     document.addEventListener('keydown', onKey, true);
     render();
+    if (view.sheet) {
+        history.pushState({ imsgSheet: true }, '');
+        sheetPushed = true;
+        window.addEventListener('popstate', onPop);
+    }
     // 手机上打开通讯录不自动弹键盘，点搜索框才聚焦；桌面保留直接输入
     if (!edit && !isPhone()) {
         search.focus({ preventScroll: true });
@@ -1426,8 +1469,8 @@ export function openContacts({ pick = false, direct = false, key = null, edit = 
 
 /** Opens Contacts on My Card, the persona in use. */
 /** 从「我的」打开自己的名片；返回时交给调用方决定去哪（现在是回「我的」） */
-export function openMyCard({ onClose = null } = {}) {
-    openContacts({ key: `p:${personas.user_avatar}`, onClose });
+export function openMyCard({ onClose = null, sheet = false } = {}) {
+    openContacts({ key: `p:${personas.user_avatar}`, sheet, onClose });
 }
 
 /** Opens the card (or the Edit form) of the open conversation's contact or group. */

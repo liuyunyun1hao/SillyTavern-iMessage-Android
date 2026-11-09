@@ -1,0 +1,391 @@
+/* iOS 26 Liquid Glass skin: the photo stays visible behind translucent bars, cards and sheets.
+   Loaded last so it sits on top of the classic look; the Customize presets still win because
+   they are scoped to their own body classes. Dark is the shape this is drawn for, light gets the
+   same glass over a bright backdrop. Turn the theme off and every rule stops applying. */
+
+body.imessage {
+    /* 玻璃的外观参数：模糊、饱和、亮边、底色 */
+    --g26-blur: 32px;
+    --g26-sat: 1.8;
+    --g26-glass: rgba(255, 255, 255, 0.58);
+    --g26-glass-strong: rgba(255, 255, 255, 0.72);
+    --g26-sheet: rgba(255, 255, 255, 0.66);
+    --g26-page: rgba(244, 244, 247, 0.62);
+    --g26-solid: rgba(250, 250, 252, 0.97);
+    --g26-hi: rgba(255, 255, 255, 0.7);
+    --g26-hair: rgba(0, 0, 0, 0.055);
+    --g26-edge: rgba(0, 0, 0, 0.06);
+    --g26-shadow: 0 1px 2px rgba(0, 0, 0, 0.05), 0 14px 34px rgba(0, 0, 0, 0.1);
+    --g26-shadow-xl: 0 2px 6px rgba(0, 0, 0, 0.08), 0 30px 80px rgba(0, 0, 0, 0.24);
+}
+
+body.imessage.imsg-dark {
+    --g26-glass: rgba(44, 44, 50, 0.5);
+    --g26-glass-strong: rgba(52, 52, 58, 0.66);
+    --g26-sheet: rgba(38, 38, 44, 0.72);
+    --g26-page: rgba(14, 14, 17, 0.66);
+    --g26-solid: rgba(32, 32, 38, 0.98);
+    --g26-hi: rgba(255, 255, 255, 0.16);
+    --g26-hair: rgba(255, 255, 255, 0.09);
+    --g26-edge: rgba(255, 255, 255, 0.1);
+    --g26-shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 18px 44px rgba(0, 0, 0, 0.45);
+    --g26-shadow-xl: 0 4px 10px rgba(0, 0, 0, 0.5), 0 36px 90px rgba(0, 0, 0, 0.6);
+}
+
+/* ── 顶栏：半透明、模糊、发丝线，滚动时保持层次 ── */
+
+body.imessage #imsg-head {
+    background: var(--g26-glass-strong);
+    -webkit-backdrop-filter: blur(24px) saturate(var(--g26-sat));
+    backdrop-filter: blur(24px) saturate(var(--g26-sat));
+    border-bottom: 0.5px solid var(--g26-hair);
+    box-shadow: inset 0 0.5px 0 var(--g26-hi);
+}
+
+body.imessage .imsg-me-bar {
+    padding-bottom: 6px;
+    background: transparent;
+    border-bottom: 0;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+}
+
+body.imessage .imsg-me-bar h1 {
+    font-size: 28px;
+    letter-spacing: -0.02em;
+}
+
+/* ── 底栏：浮起来的玻璃胶囊，不再贴着屏幕底边 ── */
+
+body.imessage {
+    --imsg-tabbar-h: calc(76px + env(safe-area-inset-bottom, 0px));
+}
+
+body.imessage .imsg-tabbar {
+    left: 12px;
+    right: 12px;
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 10px);
+    height: 58px;
+    padding-bottom: 0;
+    border: 0.5px solid var(--g26-edge);
+    border-radius: 29px;
+    background: var(--g26-glass-strong);
+    -webkit-backdrop-filter: blur(var(--g26-blur)) saturate(var(--g26-sat));
+    backdrop-filter: blur(var(--g26-blur)) saturate(var(--g26-sat));
+    box-shadow: var(--g26-shadow), inset 0 0.5px 0 var(--g26-hi);
+}
+
+body.imessage .imsg-tab {
+    margin: 5px 6px;
+    padding: 2px 0;
+    border-radius: 20px;
+    transition: color 0.12s linear, background-color 0.16s var(--imsg-ease);
+}
+
+body.imessage .imsg-tab-on {
+    background: rgba(10, 132, 255, 0.14);
+}
+
+body.imessage.imsg-dark .imsg-tab-on {
+    background: rgba(10, 132, 255, 0.22);
+}
+
+/* ── 「我的」：照片在玻璃下面，卡片是一层玻璃 ── */
+
+body.imessage .imsg-me {
+    background: var(--g26-page);
+    -webkit-backdrop-filter: blur(38px) saturate(1.3);
+    backdrop-filter: blur(38px) saturate(1.3);
+}
+
+body.imessage.imsg-dark .imsg-me {
+    background: var(--g26-page);
+}
+
+body.imessage .imsg-me-group {
+    border: 0.5px solid var(--g26-edge);
+    border-radius: 20px;
+    background: var(--g26-glass);
+    -webkit-backdrop-filter: blur(26px) saturate(var(--g26-sat));
+    backdrop-filter: blur(26px) saturate(var(--g26-sat));
+    box-shadow: var(--g26-shadow), inset 0 0.5px 0 var(--g26-hi);
+}
+
+body.imessage.imsg-dark .imsg-me-group {
+    background: var(--g26-glass);
+}
+
+body.imessage .imsg-me-row {
+    padding: 12px 14px;
+    background: transparent;
+}
+
+body.imessage .imsg-me-row + .imsg-me-row,
+body.imessage .imsg-me-row + .imsg-me-note {
+    border-top: 0;
+    box-shadow: inset 0 0.5px 0 var(--g26-hair);
+}
+
+body.imessage .imsg-me-row:active {
+    background: var(--imsg-hover);
+}
+
+body.imessage .imsg-me-ico {
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
+    box-shadow: inset 0 0.5px 0 rgba(255, 255, 255, 0.35), 0 1px 3px rgba(0, 0, 0, 0.18);
+}
+
+/* ── 面板（联系人 / 背景 / 设置 / 世界书 / 扩展 / 美化）：窗体和导航栏都是玻璃 ── */
+
+body.imessage .imsg-cn {
+    background: rgba(0, 0, 0, 0.3);
+    -webkit-backdrop-filter: blur(12px) saturate(1.2);
+    backdrop-filter: blur(12px) saturate(1.2);
+}
+
+body.imessage .imsg-cn-window {
+    border-radius: 20px;
+    background: var(--g26-page);
+    box-shadow: var(--g26-shadow-xl), inset 0 0.5px 0 var(--g26-hi);
+}
+
+body.imessage .imsg-cn-bar,
+body.imessage .imsg-cn-pane-bar {
+    background: var(--g26-glass-strong);
+    -webkit-backdrop-filter: blur(22px) saturate(var(--g26-sat));
+    backdrop-filter: blur(22px) saturate(var(--g26-sat));
+    border-bottom: 0.5px solid var(--g26-hair);
+    box-shadow: inset 0 0.5px 0 var(--g26-hi);
+}
+
+/* 标题只负责显示，绝不吃掉「完成 / 编辑」的点击 */
+body.imessage .imsg-cn-title,
+body.imessage .imsg-cn-pane-title {
+    pointer-events: none;
+}
+
+body.imessage .imsg-cn-side {
+    background: transparent;
+    border-right: 0.5px solid var(--g26-hair);
+}
+
+body.imessage .imsg-cn-search,
+body.imessage .imsg-search {
+    background: rgba(120, 120, 128, 0.14);
+    border: 0.5px solid var(--g26-edge);
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+}
+
+body.imessage .imsg-cn-row {
+    border-bottom: 0;
+    box-shadow: inset 0 -0.5px 0 var(--g26-hair);
+}
+
+body.imessage .imsg-cn-row.imsg-cn-current {
+    background: var(--imsg-selected-quiet);
+}
+
+body.imessage .imsg-cn-card,
+body.imessage .imsg-cn-group,
+body.imessage .imsg-cn-member,
+body.imessage .imsg-cn-form .imsg-cn-card {
+    border-radius: 16px;
+}
+
+/* ── 用户名片弹窗（Sheet）：圆角玻璃，底层「我的」原样留在下面 ── */
+
+body.imessage .imsg-cn.imsg-cn-sheet {
+    padding-bottom: 0;
+    background: rgba(0, 0, 0, 0.42);
+    -webkit-backdrop-filter: blur(18px) saturate(1.15);
+    backdrop-filter: blur(18px) saturate(1.15);
+}
+
+body.imessage .imsg-cn.imsg-cn-sheet .imsg-cn-window {
+    display: block;
+    width: min(560px, calc(100vw - 32px));
+    height: auto;
+    max-height: min(86dvh, 780px);
+    margin: auto;
+    border-radius: 30px;
+    overflow: hidden;
+    background: var(--g26-sheet);
+    -webkit-backdrop-filter: blur(34px) saturate(var(--g26-sat));
+    backdrop-filter: blur(34px) saturate(var(--g26-sat));
+    border: 0.5px solid var(--g26-edge);
+    box-shadow: var(--g26-shadow-xl), inset 0 0.5px 0 var(--g26-hi);
+    animation: imsg-sheet-in 0.32s var(--imsg-ease);
+}
+
+body.imessage .imsg-cn.imsg-cn-sheet .imsg-cn-side {
+    display: none;
+}
+
+body.imessage .imsg-cn.imsg-cn-sheet .imsg-cn-detail {
+    position: static;
+    width: 100%;
+    height: auto;
+    max-height: inherit;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    visibility: visible;
+    transform: none;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+    -webkit-overflow-scrolling: touch;
+}
+
+body.imessage .imsg-cn.imsg-cn-sheet .imsg-cn-pane-bar {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+}
+
+body.imessage .imsg-cn.imsg-cn-sheet .imsg-sheet-done {
+    min-width: 56px;
+    justify-content: center;
+}
+
+@keyframes imsg-sheet-in {
+    from {
+        opacity: 0;
+        transform: translateY(16px) scale(0.965);
+    }
+}
+
+/* 手机上让弹窗避开刘海和底栏 */
+@media screen and (max-width: 1000px) {
+    body.imessage .imsg-cn.imsg-cn-sheet {
+        align-items: center;
+        padding: calc(env(safe-area-inset-top, 0px) + 28px) 16px calc(env(safe-area-inset-bottom, 0px) + 24px);
+    }
+}
+
+/* 弹窗打开时底栏让位，遮罩层负责层级 */
+body.imessage:has(> .imsg-cn.imsg-cn-sheet) .imsg-tabbar {
+    display: none;
+}
+
+/* ── 动画：切页淡入、按压抬起；尊重系统的减少动态 ── */
+
+body.imessage .imsg-me:not(.imsg-hidden) {
+    animation: imsg-g26-page 0.26s var(--imsg-ease);
+}
+
+@keyframes imsg-g26-page {
+    from {
+        opacity: 0;
+        transform: translateY(6px);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    body.imessage .imsg-cn.imsg-cn-sheet .imsg-cn-window,
+    body.imessage .imsg-me:not(.imsg-hidden) {
+        animation: none;
+    }
+
+    body.imessage .imsg-me,
+    body.imessage .imsg-tabbar,
+    body.imessage .imsg-cn-window {
+        -webkit-backdrop-filter: none;
+        backdrop-filter: none;
+    }
+}
+
+/* ── 弹窗标题严格居中：两侧按钮宽窄不一时也不偏移 ── */
+
+body.imessage .imsg-cn .imsg-cn-pane-bar {
+    position: relative;
+}
+
+body.imessage .imsg-cn .imsg-cn-pane-title {
+    position: absolute;
+    left: 50%;
+    margin: 0 !important;
+    transform: translateX(-50%);
+    white-space: nowrap;
+    pointer-events: none;
+}
+
+/* ── 酒馆「快速 UI 模式 / 关闭模糊」下的替代方案：不模糊，但保留玻璃的层次 ── */
+
+body.imessage.no-blur .imsg-tabbar,
+body.imessage.no-blur .imsg-me-group,
+body.imessage.no-blur .imsg-cn-window,
+body.imessage.no-blur .imsg-cn-side,
+body.imessage.no-blur .imsg-cn-bar,
+body.imessage.no-blur .imsg-cn-pane-bar,
+body.imessage.no-blur #imsg-head,
+body.imessage.no-blur .imsg-search {
+    background: var(--g26-solid, rgba(250, 250, 252, 0.97));
+}
+
+body.imessage.imsg-dark.no-blur .imsg-tabbar,
+body.imessage.imsg-dark.no-blur .imsg-me-group,
+body.imessage.imsg-dark.no-blur .imsg-cn-window,
+body.imessage.imsg-dark.no-blur .imsg-cn-side,
+body.imessage.imsg-dark.no-blur .imsg-cn-bar,
+body.imessage.imsg-dark.no-blur .imsg-cn-pane-bar,
+body.imessage.imsg-dark.no-blur #imsg-head,
+body.imessage.imsg-dark.no-blur .imsg-search {
+    background: rgba(32, 32, 38, 0.98);
+}
+
+/* ── 输入栏也做成玻璃胶囊：照片从背后透出来 ── */
+
+body.imessage #nonQRFormItems {
+    background: var(--g26-glass-strong) !important;
+    -webkit-backdrop-filter: blur(24px) saturate(var(--g26-sat)) !important;
+    backdrop-filter: blur(24px) saturate(var(--g26-sat)) !important;
+    box-shadow: inset 0 0.5px 0 var(--g26-hi), 0 1px 2px var(--g26-edge) !important;
+}
+
+/* ── 悬浮底栏不遮挡内容：列表和「我的」的最后一行留出空间 ── */
+
+body.imessage .imsg-list-body {
+    padding-bottom: calc(var(--imsg-tabbar-h, 76px) + 10px);
+}
+
+/* ── 美化面板：手机上保持底部抽屉的形态，换成玻璃与 28px 圆角 ── */
+
+@media screen and (max-width: 1000px) {
+    #imsg-customize {
+        position: fixed;
+        background: var(--g26-sheet);
+        -webkit-backdrop-filter: blur(34px) saturate(var(--g26-sat));
+        backdrop-filter: blur(34px) saturate(var(--g26-sat));
+        border-top: 0.5px solid var(--g26-edge);
+        border-left: none;
+        border-radius: 28px 28px 0 0;
+        box-shadow: var(--g26-shadow-xl), inset 0 0.5px 0 var(--g26-hi);
+        overflow: hidden;
+    }
+
+    /* 抽屉顶部的小把手，和 iOS 的 sheet 一致 */
+    #imsg-customize::before {
+        content: "";
+        position: absolute;
+        top: 7px;
+        left: 50%;
+        width: 36px;
+        height: 5px;
+        margin-left: -18px;
+        border-radius: 999px;
+        background: var(--imsg-line-strong);
+        opacity: 0.55;
+        pointer-events: none;
+    }
+
+    #imsg-customize .imsg-cz-head {
+        padding-top: 6px;
+    }
+
+    #imsg-customize .imsg-cz-body {
+        border-radius: 0;
+    }
+}
