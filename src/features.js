@@ -64,6 +64,34 @@ function initTooltips() {
     });
 }
 
+/**
+ * 输入框左侧的加号打开酒馆的「聊天选项」。
+ * 酒馆自己用 document 上的「点到别处就收起」来管这个菜单，判断依据是按钮的 :hover / :focus；
+ * 部分安卓浏览器（套壳 WebView、Via 之类）点完触摸不会留下 :hover，于是同一次点击里菜单刚
+ * 打开就被收起，用户看到的就是「点了没反应」。这里让这次点击不再冒泡到 document，
+ * 菜单就留得住；点空白处时酒馆自己的收起逻辑照常工作。
+ */
+function initComposerPlus() {
+    const left = document.getElementById('leftSendForm');
+    const button = document.getElementById('options_button');
+    if (!left || !button) {
+        return;
+    }
+    if (!left.dataset.imsgComposer) {
+        left.dataset.imsgComposer = '1';
+        left.addEventListener('click', (event) => {
+            if (!isOn()) {
+                return;
+            }
+            // 冒泡阶段：按钮自己的开关先跑过，再把这次点击挡在 document 之外
+            event.stopPropagation();
+        });
+    }
+    button.setAttribute('role', 'button');
+    button.setAttribute('aria-label', t('Chat Options 聊天选项'));
+    button.setAttribute('title', t('Chat Options 聊天选项'));
+}
+
 export function initFeatures() {
     const { eventTypes } = context();
     const eventSource = events();
@@ -103,4 +131,5 @@ export function initFeatures() {
     });
 
     initTooltips();
+    onStart(initComposerPlus);
 }
