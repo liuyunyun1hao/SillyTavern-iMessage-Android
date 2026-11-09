@@ -1334,3 +1334,8 @@ body.imessage #chat .mes:hover > .imsg-stamp,
 body.imessage #chat .mes:focus-within > .imsg-stamp {
     opacity: 0;
 }
+
+/* 只有一个版本时，左右箭头没有可翻的内容，只剩两个孤零零的「‹ ›」——收起来 */
+body.imessage:not(.swipeAllMessages) #chat .mes:not(.imsg-versions) :is(.swipe_left, .swipeRightBlock) {
+    display: none;
+}

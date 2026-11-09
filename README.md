@@ -6,6 +6,26 @@
 
 🍁由 Claude Opus 4.5、DeepSeek R1 以及120131-yu倾情奉献。
 
+## 🆕 v1.0.5 修复与打磨（真机 + 无头浏览器回归）
+
+这一轮做的是「整个项目再看一遍」，重点修掉容易被当成「页面坏了」的显示问题，并补上交互上的死角：
+
+- **玻璃在关闭模糊时会「透视」**：酒馆的快速 UI 模式会给页面加 `no-blur` 并强制关掉所有 `backdrop-filter`，原来是半透明的面板就变成一层透明膜 —— 「我的」页透出下面的聊天列表、名片弹窗透出设置行，看起来像重影。现在在没有模糊（或浏览器不支持 `backdrop-filter`）时，这些表面自动换成同色系的不透明底色，玻璃质感保留，字不再互相打架。
+- **「我的」页不再是半透明浮层**：它盖住的是聊天列表/对话，透出上一页只会变成脏影；现在用不透明的分组底色，卡片仍是玻璃。
+- **选中行看不清**：浅灰选中底配了白字。现在选中行用正常文字色，备注用次要文字色。
+- **分组标题像灰条**：设置 / 扩展 / 世界书 / 背景里的分组标题原来为了吸顶垫了一条灰底，现在改成 iOS 那样的小字标题，不再是一整条。
+- **「我的名片」弹窗拉满全高**：内容只有半屏，下面却空一大块。现在按内容高度居中显示。
+- **桌面端「单个版本」的 ‹ › 空箭头**：没有可翻的版本时不再显示两个孤零零的箭头。
+- **「美化」抽屉**：手机上是真正的底部抽屉，加了可点的遮罩，点空白处收起；标题居中。
+- **名片里的长按钮名**（「锁定本对话」）不再换行压到图标上。
+- 成员列表去掉套一层的小圆角卡片。
+- **补上了深层页面关不掉的死角**：扩展详情、背景图片网格现在右上角都有「完成」，不用先退回上一级再关。
+- 补全中文化：群组编辑里的「谁来说话」「提示词里的角色卡」、四种发言策略、三种角色卡模式、「静音 / 添加照片 / 展开」等。
+- 联系人搜索加了去抖（角色多时不再每敲一个字就重建整个列表），搜索时列表自动回到顶部；排序（A–Z / 最近）会记住上次的选择；手机上被名片盖住的列表不再能 Tab / 点到。
+- 输入框聚焦时的蓝色粗描边改成细一圈的柔光环。
+
+> 回归方式：本地起一份 SillyTavern 1.19，装本扩展，在 390×844 / 360×640 / 430×932 三种手机尺寸和桌面 1280×800 下逐页截图检查；开关主题跑仓库自带的 `tests/leak-check.js`（无残留、无报错）。暗色、壁纸、无模糊三种模式都过了一遍。
+
 ## 🎨 新增：一键主题方案（Customize 里）
 
 打开 **扩展设置 → iMessage Theme → Customize 自定义**，最上面多了一排主题卡：
@@ -75,6 +95,13 @@
 🚫**纯免费分享，严禁倒卖！**
 
 ---
+
+## 🆕 v1.0.5 fixes and polish
+
+- **Glass without blur no longer turns into a window**: ST's Fast UI (`body.no-blur`) strips every `backdrop-filter`, which used to leave translucent panes see-through ("Me" showing the chat list, the My Card sheet showing rows behind it). Opaque tints of the same colours now stand in when blur is off or unsupported.
+- The **Me** tab and the **My Card sheet** are sized and coloured as real surfaces now (no ghost text, content-height sheet).
+- Readable **selected rows** (light grey fill no longer forces white text), plain **group titles** instead of grey bars, no full-height empty sheet, no stray ‹ › for single-version messages, a proper **bottom sheet** for Customize (with a tappable scrim), long action labels no longer overflow, and **Done** is reachable from deep pages (extension details, background grid).
+- More Chinese coverage (group reply strategy, Mute, Add Photo, Show more…), debounced contacts search that jumps back to the top, remembered sort order, covered lists marked `inert`, and a softer focus ring on inputs.
 
 # iMessage Theme for SillyTavern - Android Exclusive Fix
 

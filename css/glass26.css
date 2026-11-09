@@ -34,6 +34,50 @@ body.imessage.imsg-dark {
     --g26-shadow-xl: 0 4px 10px rgba(0, 0, 0, 0.5), 0 36px 90px rgba(0, 0, 0, 0.6);
 }
 
+/* ── 没有模糊的时候，玻璃不能是透明的 ──
+   酒馆的「快速 UI」模式会加 body.no-blur，并用 !important 关掉页面上所有 backdrop-filter；
+   部分安卓 WebView 也根本不支持 backdrop-filter。这时候半透明的面板失去模糊，下面的页面、
+   文字会直接透上来（「我的」页透出聊天列表、名片弹窗透出设置行）。这两种情况改用不透明的
+   同色系底色，观感一致、字也不再互相打架。 */
+
+body.imessage.no-blur {
+    --g26-glass: #f7f7fa;
+    --g26-glass-strong: #fbfbfd;
+    --g26-sheet: #f9f9fb;
+    --g26-page: #f2f2f7;
+    --g26-solid: #fafafc;
+    --g26-hi: rgba(255, 255, 255, 0.9);
+}
+
+body.imessage.imsg-dark.no-blur {
+    --g26-glass: #25252b;
+    --g26-glass-strong: #2c2c32;
+    --g26-sheet: #24242a;
+    --g26-page: #151519;
+    --g26-solid: #1f1f25;
+    --g26-hi: rgba(255, 255, 255, 0.1);
+}
+
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    body.imessage {
+        --g26-glass: #f7f7fa;
+        --g26-glass-strong: #fbfbfd;
+        --g26-sheet: #f9f9fb;
+        --g26-page: #f2f2f7;
+        --g26-solid: #fafafc;
+        --g26-hi: rgba(255, 255, 255, 0.9);
+    }
+
+    body.imessage.imsg-dark {
+        --g26-glass: #25252b;
+        --g26-glass-strong: #2c2c32;
+        --g26-sheet: #24242a;
+        --g26-page: #151519;
+        --g26-solid: #1f1f25;
+        --g26-hi: rgba(255, 255, 255, 0.1);
+    }
+}
+
 /* ── 顶栏：半透明、模糊、发丝线，滚动时保持层次 ── */
 
 body.imessage #imsg-head {
@@ -92,16 +136,16 @@ body.imessage.imsg-dark .imsg-tab-on {
     background: rgba(10, 132, 255, 0.22);
 }
 
-/* ── 「我的」：照片在玻璃下面，卡片是一层玻璃 ── */
+/* ── 「我的」：一个页面，不是浮层 —— 底下不显示上一页 ──
+   卡片仍然是一层玻璃，但页面本身用不透明底色：它盖住的是聊天列表/对话，让它们透上来
+   只会变成重影文字。 */
 
 body.imessage .imsg-me {
-    background: var(--g26-page);
-    -webkit-backdrop-filter: blur(38px) saturate(1.3);
-    backdrop-filter: blur(38px) saturate(1.3);
+    background: var(--g26-page-solid);
 }
 
 body.imessage.imsg-dark .imsg-me {
-    background: var(--g26-page);
+    background: var(--g26-page-solid);
 }
 
 body.imessage .imsg-me-group {
@@ -192,6 +236,12 @@ body.imessage .imsg-cn-row {
 
 body.imessage .imsg-cn-row.imsg-cn-current {
     background: var(--imsg-selected-quiet);
+    /* 安静的高亮是浅灰底，白字在上面看不清 */
+    color: var(--imsg-fg);
+}
+
+body.imessage .imsg-cn-row.imsg-cn-current :is(.imsg-cn-row-note, .imsg-cn-me-text small) {
+    color: var(--imsg-fg-2);
 }
 
 /* iOS 的分组标题是轻量的小字，不是一条白色横条 */
@@ -238,6 +288,9 @@ body.imessage .imsg-cn.imsg-cn-sheet .imsg-cn-window {
     height: auto;
     max-height: min(86dvh, 780px);
     margin: auto;
+    /* 内容有多高就多高：作为 flex 子项默认会被拉满整个高度，底下就空出一大块白 */
+    align-self: center;
+    flex: 0 0 auto;
     border-radius: 30px;
     overflow: hidden;
     background: var(--g26-sheet);
@@ -455,9 +508,11 @@ body.imessage.imsg-dark .imsg-cn-search {
 }
 
 @media screen and (max-width: 1000px) {
-    /* sticky section labels need an opaque plate, or rows scroll visibly through them */
-    body.imessage .imsg-cn-section-title {
-        background: var(--g26-page-solid);
+    /* 分组标题在弹窗列表里是普通小字，不吸顶：吸顶时要垫一层底色，垫成一条灰条反而像
+       分组的「条」，和 iOS 的分组标题不一样。通讯录全屏弹窗自己有一套（见下面 .imsg-cn-modal）。 */
+    body.imessage .imsg-cn:not(.imsg-cn-modal) .imsg-cn-section-title {
+        position: static;
+        background: none;
     }
 }
 
@@ -760,4 +815,10 @@ body.imessage.imsg-dark {
     body.imessage .imsg-cn.imsg-cn-modal .imsg-cn-window {
         animation: none;
     }
+}
+
+/* 名片里的成员行：外层已经是一张圆角卡片，行自己再带 16px 圆角时，分隔线会在两端翘起来，
+   看起来像一层套一层的小卡片。 */
+body.imessage .imsg-cn-members .imsg-cn-member {
+    border-radius: 0;
 }

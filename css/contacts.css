@@ -684,7 +684,9 @@ body.imessage .imsg-cn .imsg-cn-field select {
 }
 
 body.imessage .imsg-cn :is(input, textarea, select):not(.imsg-cn-search input):focus {
-    box-shadow: 0 0 0 0.5px var(--imsg-blue), 0 0 0 3.5px var(--imsg-focus);
+    /* 细一圈就够，iOS 的表单不会给整块输入框描一圈很粗的蓝边 */
+    outline: none;
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--imsg-blue) 30%, transparent);
 }
 
 /* the name: big and centred, like the card it becomes */
@@ -700,7 +702,7 @@ body.imessage .imsg-cn .imsg-cn-form > .imsg-cn-field:first-of-type input {
 
 body.imessage .imsg-cn .imsg-cn-form > .imsg-cn-field:first-of-type input:focus {
     background: var(--imsg-field);
-    box-shadow: 0 0 0 0.5px var(--imsg-blue), 0 0 0 3.5px var(--imsg-focus);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--imsg-blue) 30%, transparent);
 }
 
 body.imessage .imsg-cn-form > .imsg-cn-field:first-of-type .imsg-cn-field-label {

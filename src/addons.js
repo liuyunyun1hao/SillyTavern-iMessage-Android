@@ -190,7 +190,18 @@ function paneBar(title, right) {
         render();
     });
     back.prepend(glyph('chevron-left'));
-    bar.append(back, element('h2', 'imsg-cn-pane-title', title), right ?? element('span'));
+    // 手机上详情页盖住了左栏的「完成」，这里补一个，任何一层都能直接关掉窗口
+    const tools = element('span', 'imsg-cn-tools');
+    if (isPhone()) {
+        tools.append(button('imsg-cn-done', 'Done 完成', close));
+    }
+    if (right) {
+        tools.append(right);
+    }
+    if (!tools.childElementCount) {
+        tools.append(element('span'));
+    }
+    bar.append(back, element('h2', 'imsg-cn-pane-title', title), tools);
     return bar;
 }
 

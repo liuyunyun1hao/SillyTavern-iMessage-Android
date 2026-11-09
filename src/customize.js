@@ -660,6 +660,7 @@ function importCustomize(refresh) {
 
 function closePanel() {
     document.getElementById(PANEL_ID)?.remove();
+    document.querySelector('.imsg-cz-scrim')?.remove();
     document.body.classList.remove('imsg-customizing');
 }
 
@@ -760,7 +761,10 @@ export function openCustomize() {
     foot.append(resetAll, element('span', 'imsg-spacer'), importButton, exportButton);
 
     render();
-    document.body.append(panel);
+    // 手机上面板是底部抽屉，后面垫一层可点的遮罩：点外面就收起来，也不会和后面的页面混在一起
+    const scrim = element('div', 'imsg-cz-scrim');
+    scrim.addEventListener('click', closePanel);
+    document.body.append(scrim, panel);
     document.body.classList.add('imsg-customizing');
     done.focus({ preventScroll: true });
 }

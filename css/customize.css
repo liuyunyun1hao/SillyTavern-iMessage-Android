@@ -32,22 +32,25 @@
 }
 
 #imsg-customize .imsg-cz-head {
+    position: relative;
     display: flex;
     align-items: center;
+    justify-content: center;
     flex: none;
     height: var(--imsg-bar-h, 52px);
-    padding: 0 12px 0 18px;
+    padding: 0 12px;
     border-bottom: 0.5px solid var(--imsg-line);
 }
 
 #imsg-customize .imsg-cz-title {
-    flex: 1;
     margin: 0;
     color: var(--imsg-fg);
     font: 600 15px/20px var(--imsg-font-display);
 }
 
 #imsg-customize .imsg-cz-done {
+    position: absolute;
+    right: 12px;
     padding: 4px 12px;
     border: none;
     border-radius: 999px;
@@ -403,5 +406,32 @@ body.imessage:not(.imsg-c-narrowBubbles) #chat .mes[is_user="false"]:not(.imsg-m
     body.imessage:not(.imsg-c-narrowBubbles) #chat .mes[is_user="false"]:not(.imsg-media, .imsg-jumbo) {
         padding-left: 14px;
         padding-right: 14px;
+    }
+}
+
+/* 手机上的「美化」是底部抽屉：后面垫一层轻遮罩，点一下就收起 */
+.imsg-cz-scrim {
+    display: none;
+}
+
+@media screen and (max-width: 1000px) {
+    body.imessage.imsg-customizing .imsg-cz-scrim {
+        display: block;
+        position: fixed;
+        inset: 0;
+        z-index: 3049;
+        background: rgba(0, 0, 0, 0.18);
+        -webkit-backdrop-filter: blur(2px);
+        backdrop-filter: blur(2px);
+        animation: imsg-cz-fade 0.2s var(--imsg-ease);
+    }
+
+    @keyframes imsg-cz-fade {
+        from { opacity: 0; }
+    }
+
+    /* 抽屉本身不透明：没有模糊时它不能透出后面的字 */
+    body.imessage.imsg-customizing #imsg-customize {
+        background: var(--g26-sheet, var(--imsg-sheet));
     }
 }

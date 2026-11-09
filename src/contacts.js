@@ -44,6 +44,14 @@ const GENERATION_MODES = [
 
 /** What's on screen: the selection, the mode and the search */
 let view = { key: null, mode: 'card', pick: false, direct: false, sheet: false, needle: '', tag: null, sort: 'name', onClose: null };
+/** 上次选的排序，下次打开仍按它排（A–Z / 最近） */
+let lastSort = 'name';
+/** 搜索框上一次渲染用的文字，用来知道要不要把列表滚回顶部 */
+let lastNeedle = '';
+/** 搜索输入的去抖计时器：联系人很多时，每敲一个字都重建整个列表会卡 */
+let searchTimer = 0;
+/** 一次渲染里复用同一份联系人列表，角色多时不用算三遍 */
+let itemsCache = null;
 
 /** Sheet mode (opened from Me) keeps a history entry so Android's back key closes it. */
 let sheetPushed = false;
@@ -170,8 +178,11 @@ function picture(item, size) {
     return holder;
 }
 
-/** Everyone, sorted by name, with what a search looks at. */
+/** Everyone, sorted by name, with what a search looks at. Cached until the next render. */
 function allItems() {
+    if (itemsCache) {
+        return itemsCache;
+    }
     const { characters, groups } = context();
     const items = [
         ...groups.map((group) => ({ group })),
@@ -189,9 +200,11 @@ function allItems() {
     if (view.sort === 'recent') {
         const times = recentTimes();
         const when = (item) => times.get(item.group ? `g_${item.group.id}` : `c_${item.character.avatar}`) ?? -1;
-        return items.sort((a, b) => when(b) - when(a) || a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }));
+        itemsCache = items.sort((a, b) => when(b) - when(a) || a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }));
+        return itemsCache;
     }
-    return items.sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }));
+    itemsCache = items.sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }));
+    return itemsCache;
 }
 
 function letterOf(name) {
@@ -472,7 +485,9 @@ function renderList(list, index) {
     const items = allItems();
     const needle = view.needle.trim().toLowerCase();
     const shown = items.filter((item) => (!needle || item.search.includes(needle)) && (!view.tag || item.tags.some((tag) => tag.id === view.tag)));
-    const scroll = list.scrollTop;
+    // a new search starts at the top; selecting a contact keeps the list where it was
+    const scroll = view.needle === lastNeedle ? list.scrollTop : 0;
+    lastNeedle = view.needle;
     const parts = [];
     if (!needle && !view.tag && !view.pick) {
         parts.push(myCard());
@@ -564,7 +579,7 @@ function infoBlock(label, text, limit = 420) {
     const body = element('p', '', value.length > limit ? `${value.slice(0, limit).replace(/\s+\S*$/, '')}…` : value);
     block.append(body);
     if (value.length > limit) {
-        const more = button('imsg-cn-more', 'more', () => {
+        const more = button('imsg-cn-more', 'Show more', () => {
             body.textContent = value;
             more.remove();
         });
@@ -756,7 +771,7 @@ function renderCharacterForm(pane, item) {
     form.append(advanced);
 
     const cancel = button('imsg-cn-cancel', 'Cancel', () => {
-        view.mode = character ? 'card' : 'card';
+        view.mode = 'card';
         if (!character) {
             view.key = null;
         }
@@ -1361,6 +1376,8 @@ function render() {
     if (!root) {
         return;
     }
+    // the data may have changed since the last pass, so this render builds a fresh list
+    itemsCache = null;
     root.classList.toggle('imsg-cn-picking', view.pick);
     renderTags(root.querySelector('.imsg-cn-tags'));
     renderList(root.querySelector('.imsg-cn-scroll'), root.querySelector('.imsg-cn-index'));
@@ -1369,7 +1386,10 @@ function render() {
     if (view.key && !item && !view.key.startsWith('new:')) {
         view.key = null;
     }
-    root.classList.toggle('imsg-cn-has-detail', !!view.key || view.sheet);
+    const detailed = !!view.key || view.sheet;
+    root.classList.toggle('imsg-cn-has-detail', detailed);
+    // 手机上名片会整张盖住列表，被盖住的列表不该还能 Tab 到、点到
+    root.querySelector('.imsg-cn-side')?.toggleAttribute('inert', detailed);
     if (view.key === 'new:c') {
         renderCharacterForm(pane, null);
     } else if (view.key === 'new:p') {
@@ -1455,7 +1475,8 @@ function onKey(event) {
  */
 export function openContacts({ pick = false, direct = false, key = null, edit = false, sheet = false, onClose = null } = {}) {
     teardown();
-    view = { key, mode: edit ? 'edit' : 'card', pick, direct, sheet, needle: '', tag: null, onClose };
+    view = { key, mode: edit ? 'edit' : 'card', pick, direct, sheet, needle: '', tag: null, sort: lastSort, onClose };
+    lastNeedle = '';
 
     const root = element('div');
     root.id = ROOT_ID;
@@ -1497,6 +1518,7 @@ export function openContacts({ pick = false, direct = false, key = null, edit = 
     const done = button('imsg-cn-done', pick ? 'Cancel' : 'Done', () => close(pick ? 'cancel' : 'done'));
     const sort = button('imsg-cn-sort', view.sort === 'recent' ? '最近' : 'A–Z', () => {
         view.sort = view.sort === 'recent' ? 'name' : 'recent';
+        lastSort = view.sort;
         sort.textContent = view.sort === 'recent' ? '最近' : 'A–Z';
         sort.title = t(view.sort === 'recent' ? 'Sort by recent 按最近' : 'Sort by name 按字母');
         root.querySelector('.imsg-cn-scroll').scrollTop = 0;
@@ -1514,12 +1536,19 @@ export function openContacts({ pick = false, direct = false, key = null, edit = 
     search.placeholder = t(pick ? 'To: name or group' : 'Search');
     search.setAttribute('aria-label', search.placeholder);
     search.addEventListener('input', () => {
-        view.needle = search.value;
-        render();
+        // 联系人很多时，每敲一个字都重建整个列表会卡：停一下再画
+        clearTimeout(searchTimer);
+        searchTimer = setTimeout(() => {
+            view.needle = search.value;
+            render();
+        }, 110);
     });
     search.addEventListener('keydown', (event) => {
         // Enter in New Message writes to the first match
         if (event.key === 'Enter' && view.pick) {
+            clearTimeout(searchTimer);
+            view.needle = search.value;
+            render();
             root.querySelector('.imsg-cn-scroll .imsg-cn-row:not(.imsg-cn-me)')?.click();
         }
     });

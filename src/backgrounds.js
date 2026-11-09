@@ -251,7 +251,13 @@ function renderGrid(pane, pictures, folders) {
     add.title = t('Add Photos 添加图片');
     add.append(glyph('plus'));
     add.addEventListener('click', upload);
-    bar.append(back, element('h2', 'imsg-cn-pane-title', title), add);
+    // 手机上进入图片网格后左栏会整个隐藏，右上角要留一个「完成」，否则只能先退回媒体库才能关掉
+    const tools = element('span', 'imsg-cn-tools');
+    if (isPhone()) {
+        tools.append(button('imsg-cn-done', 'Done 完成', close));
+    }
+    tools.append(add);
+    bar.append(back, element('h2', 'imsg-cn-pane-title', title), tools);
 
     const status = element('div', 'imsg-bg-status');
     const locked = lockedUrl();
@@ -289,6 +295,7 @@ function render() {
     renderSide(root.querySelector('.imsg-cn-side'), pictures, folders);
     renderGrid(root.querySelector('.imsg-cn-detail'), pictures, folders);
     root.classList.toggle('imsg-cn-has-detail', view.picked);
+    root.querySelector('.imsg-cn-side')?.toggleAttribute('inert', view.picked);
 }
 
 function scheduleRedraw() {

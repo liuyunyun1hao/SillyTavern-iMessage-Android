@@ -83,7 +83,8 @@ body.imessage.imsg-tabs #form_sheld {
 body.imessage .imsg-me {
     position: fixed;
     z-index: 2999;
-    inset: 0 0 var(--imsg-tabbar-h);
+    /* 底边贴着悬浮底栏的上沿（58px 胶囊 + 10px 间距），中间不留一条白缝 */
+    inset: 0 0 calc(env(safe-area-inset-bottom, 0px) + 68px);
     display: flex;
     flex-direction: column;
     background: var(--imsg-sheet);

@@ -25,7 +25,9 @@ const TABS = [
 function setActive(key) {
     document.body.dataset.imsgTab = key;
     for (const tab of document.querySelectorAll(`#${BAR_ID} .imsg-tab`)) {
-        tab.classList.toggle('imsg-tab-on', tab.dataset.tab === key);
+        const on = tab.dataset.tab === key;
+        tab.classList.toggle('imsg-tab-on', on);
+        tab.setAttribute('aria-selected', String(on));
     }
 }
 
@@ -123,33 +125,36 @@ function group(rows) {
     return box;
 }
 
+/** 当前人设的头像和名字，换人设时跟着换 */
+function drawProfile(box) {
+    const live = SillyTavern.getContext();
+    const avatar = box.querySelector('.imsg-me-avatar');
+    const name = box.querySelector('.imsg-me-who b');
+    if (!avatar || !name) {
+        return;
+    }
+    const userAvatar = personas.user_avatar || live.user_avatar;
+    avatar.replaceChildren();
+    if (userAvatar) {
+        const img = element('img');
+        img.alt = '';
+        setPicture(img, 'persona', userAvatar, 96);
+        avatar.append(img);
+        monogramize(img, live.name1 || 'Me');
+    } else {
+        avatar.textContent = (live.name1 || 'Me').trim().charAt(0);
+    }
+    name.textContent = live.name1 || t('Me 我');
+}
+
 function profile() {
-    const ctx = SillyTavern.getContext();
     const box = element('div', 'imsg-me-profile');
     const avatar = element('span', 'imsg-me-avatar');
     const who = element('div', 'imsg-me-who');
-    who.append(element('b', '', ctx.name1 || t('Me 我')));
-    who.append(element('span', '', t('Persona 当前人设')));
+    who.append(element('b', ''), element('span', '', t('Persona 当前人设')));
     box.append(avatar, who);
-
-    /** 当前人设的头像和名字，换人设时跟着换 */
-    const update = () => {
-        const live = SillyTavern.getContext();
-        const userAvatar = personas.user_avatar || live.user_avatar;
-        avatar.replaceChildren();
-        if (userAvatar) {
-            const img = element('img');
-            img.alt = '';
-            setPicture(img, 'persona', userAvatar, 96);
-            avatar.append(img);
-            monogramize(img, live.name1 || 'Me');
-        } else {
-            avatar.textContent = (live.name1 || 'Me').trim().charAt(0);
-        }
-        who.firstElementChild.textContent = live.name1 || t('Me 我');
-    };
-    update();
     box.dataset.refresh = 'me';
+    drawProfile(box);
     return box;
 }
 
@@ -231,21 +236,7 @@ function showMe() {
     // 每次进「我的」都对一遍当前人设
     const profileBox = root.querySelector('.imsg-me-profile');
     if (profileBox) {
-        const avatar = profileBox.querySelector('.imsg-me-avatar');
-        const name = profileBox.querySelector('.imsg-me-who b');
-        const live = SillyTavern.getContext();
-        const userAvatar = personas.user_avatar || live.user_avatar;
-        avatar.replaceChildren();
-        if (userAvatar) {
-            const img = element('img');
-            img.alt = '';
-            setPicture(img, 'persona', userAvatar, 96);
-            avatar.append(img);
-            monogramize(img, live.name1 || 'Me');
-        } else {
-            avatar.textContent = (live.name1 || 'Me').trim().charAt(0);
-        }
-        if (name) name.textContent = live.name1 || t('Me 我');
+        drawProfile(profileBox);
     }
 }
 
@@ -264,6 +255,7 @@ function build() {
         const node = button('imsg-tab');
         node.dataset.tab = tab.key;
         node.setAttribute('role', 'tab');
+        node.setAttribute('aria-selected', 'false');
         node.append(glyph(tab.symbol), element('span', '', t(tab.label)));
         node.addEventListener('click', () => activateTab(tab.key));
         bar.append(node);
