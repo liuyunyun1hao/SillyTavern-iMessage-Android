@@ -1,0 +1,288 @@
+/* iOS 26 Liquid Glass: the photo is the page, the messages are solid, and only the controls are
+   glass. The scheme is opt-in (Customize → 主题方案), so nothing here changes the classic look. */
+
+/* ---- header: floating glass buttons, a big picture and a name pill; no solid bar ---- */
+body.imessage.imsg-c-liquidglass #imsg-head {
+    height: calc(102px + var(--imsg-safe-top, 0px)) !important;
+    padding: var(--imsg-safe-top, 0px) 10px 0 !important;
+    background: linear-gradient(180deg, rgba(0, 0, 0, 0.34) 0%, rgba(0, 0, 0, 0.12) 58%, transparent 100%) !important;
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+    border-bottom: 0 !important;
+}
+
+body.imessage.imsg-c-liquidglass #imsg-head .imsg-back,
+body.imessage.imsg-c-liquidglass .imsg-head-actions .imsg-sym-button {
+    width: 40px;
+    height: 40px;
+    margin-top: 8px;
+    border-radius: 50%;
+    color: #fff;
+    background: rgba(28, 28, 30, 0.32);
+    -webkit-backdrop-filter: blur(22px) saturate(1.8);
+    backdrop-filter: blur(22px) saturate(1.8);
+    box-shadow:
+        inset 0 0.5px 0 rgba(255, 255, 255, 0.32),
+        inset 0 0 0 0.5px rgba(255, 255, 255, 0.22),
+        0 6px 18px rgba(0, 0, 0, 0.22);
+}
+
+body.imessage.imsg-c-liquidglass #imsg-head .imsg-back:hover,
+body.imessage.imsg-c-liquidglass .imsg-head-actions .imsg-sym-button:hover {
+    background: rgba(28, 28, 30, 0.46);
+}
+
+body.imessage.imsg-c-liquidglass .imsg-head-actions {
+    margin: 8px 0 0 auto;
+}
+
+body.imessage.imsg-c-liquidglass .imsg-head-who {
+    top: calc(var(--imsg-safe-top, 0px) + 8px);
+    gap: 7px;
+}
+
+body.imessage.imsg-c-liquidglass #imsg-head .imsg-avatar {
+    width: 58px;
+    height: 58px;
+    box-shadow:
+        0 0 0 0.5px rgba(255, 255, 255, 0.26),
+        0 8px 24px rgba(0, 0, 0, 0.3);
+}
+
+body.imessage.imsg-c-liquidglass .imsg-head-name {
+    padding: 6px 12px 7px;
+    border-radius: 999px;
+    color: #fff;
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1;
+    background: rgba(28, 28, 30, 0.38);
+    -webkit-backdrop-filter: blur(18px) saturate(1.6);
+    backdrop-filter: blur(18px) saturate(1.6);
+    box-shadow:
+        inset 0 0.5px 0 rgba(255, 255, 255, 0.24),
+        inset 0 0 0 0.5px rgba(255, 255, 255, 0.16);
+}
+
+/* the name is a label, not a disclosure: no chevron in this scheme */
+body.imessage.imsg-c-liquidglass .imsg-head-name::after {
+    display: none;
+}
+
+/* ---- messages: solid, high-contrast bubbles; the wallpaper shows around them ---- */
+body.imessage.imsg-c-liquidglass #chat {
+    padding-top: 2px;
+}
+
+body.imessage.imsg-c-liquidglass #chat .mes {
+    padding-left: 20px;
+    padding-right: 20px;
+}
+
+body.imessage.imsg-c-liquidglass #chat .mes .mes_block {
+    box-shadow:
+        0 1px 2px rgba(0, 0, 0, 0.18),
+        0 8px 22px rgba(0, 0, 0, 0.10);
+}
+
+/* split replies are one run of separate bubbles, not a single tall slab */
+body.imessage.imsg-c-liquidglass #chat .imsg-parts {
+    gap: var(--imsg-mes-gap, 5px);
+}
+
+/* the white bubble needs a hairline and a little lift on a bright photo */
+body.imessage.imsg-c-liquidglass #chat .mes[is_user="true"] .mes_block,
+body.imessage.imsg-c-liquidglass #chat .mes[is_user="true"] .imsg-part {
+    box-shadow:
+        0 0 0 0.5px rgba(0, 0, 0, 0.10),
+        0 1px 3px rgba(0, 0, 0, 0.16),
+        0 8px 20px rgba(0, 0, 0, 0.16);
+}
+
+/* the charcoal bubble gets a faint inner rim so it separates from a dark wallpaper */
+body.imessage.imsg-c-liquidglass #chat .mes:not([is_user="true"]) .imsg-part,
+body.imessage.imsg-c-liquidglass #chat .mes:not([is_user="true"]) .mes_block {
+    box-shadow:
+        inset 0 0 0 0.5px rgba(255, 255, 255, 0.07),
+        0 1px 3px rgba(0, 0, 0, 0.18),
+        0 8px 20px rgba(0, 0, 0, 0.14);
+}
+
+body.imessage.imsg-c-liquidglass #chat .mes.imsg-last:not(.imsg-sys) .mes_block::before {
+    filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.1));
+}
+
+/* timestamps and receipts sit on the picture as quiet text, not as frosted pills */
+body.imessage.imsg-c-liquidglass #chat .mes > .imsg-stamp,
+body.imessage.imsg-c-liquidglass.imsg-receipts #chat .mes[data-imsg-receipt]::after,
+body.imessage.imsg-c-liquidglass #chat .mes .name_text,
+body.imessage.imsg-c-liquidglass #chat .mes .swipeRightBlock {
+    padding: 0 !important;
+    border-radius: 0;
+    background: none !important;
+    color: rgba(255, 255, 255, 0.8);
+    font-weight: 500;
+    /* ST's "no shadows" setting drops text-shadow globally; a filter halo survives it */
+    filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.85)) drop-shadow(0 0 3px rgba(0, 0, 0, 0.5));
+}
+
+body.imessage.imsg-c-liquidglass #chat .mes > .imsg-stamp {
+    margin: 14px 0 9px;
+}
+
+/* ---- composer: one floating capsule of dark liquid glass ---- */
+body.imessage.imsg-c-liquidglass #form_sheld {
+    padding: 10px 12px calc(10px + var(--imsg-safe-bottom, env(safe-area-inset-bottom, 0px))) !important;
+}
+
+body.imessage.imsg-c-liquidglass #nonQRFormItems {
+    min-height: 52px !important;
+    padding: 0 6px !important;
+    border-radius: 26px !important;
+    background: rgba(28, 28, 30, 0.4) !important;
+    -webkit-backdrop-filter: blur(28px) saturate(1.8) !important;
+    backdrop-filter: blur(28px) saturate(1.8) !important;
+    box-shadow:
+        inset 0 0.5px 0 rgba(255, 255, 255, 0.3),
+        inset 0 0 0 0.5px rgba(255, 255, 255, 0.16),
+        0 10px 30px rgba(0, 0, 0, 0.26) !important;
+}
+
+body.imessage.imsg-c-liquidglass #leftSendForm {
+    width: 34px !important;
+    height: 34px !important;
+    min-width: 34px !important;
+    background: rgba(255, 255, 255, 0.14) !important;
+    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(12px);
+}
+
+body.imessage.imsg-c-liquidglass #leftSendForm::after {
+    background-color: #fff !important;
+}
+
+body.imessage.imsg-c-liquidglass #send_textarea,
+body.imessage.imsg-c-liquidglass #send_textarea:focus {
+    color: #fff !important;
+    caret-color: #fff !important;
+}
+
+body.imessage.imsg-c-liquidglass #send_textarea::placeholder {
+    color: rgba(255, 255, 255, 0.7) !important;
+}
+
+body.imessage.imsg-c-liquidglass #rightSendForm > #send_but,
+body.imessage.imsg-c-liquidglass #rightSendForm > #send_but.displayNone {
+    width: 34px !important;
+    height: 34px !important;
+    min-width: 34px !important;
+    background: rgba(255, 255, 255, 0.16) !important;
+    color: #fff !important;
+    box-shadow: inset 0 0 0 0.5px rgba(255, 255, 255, 0.14);
+}
+
+body.imessage.imsg-c-liquidglass:has(#send_textarea:not(:placeholder-shown)) #rightSendForm > #send_but {
+    background: var(--imsg-blue) !important;
+    color: #fff !important;
+    box-shadow: 0 6px 18px rgba(10, 132, 255, 0.42);
+}
+
+/* ---- the light variant keeps the same composition, with white glass and dark ink ---- */
+body.imessage.imsg-c-liquidglass:not(.imsg-dark) #imsg-head {
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.46) 0%, rgba(255, 255, 255, 0.16) 58%, transparent 100%) !important;
+}
+
+body.imessage.imsg-c-liquidglass:not(.imsg-dark) #imsg-head .imsg-back,
+body.imessage.imsg-c-liquidglass:not(.imsg-dark) .imsg-head-actions .imsg-sym-button {
+    color: #111;
+    background: rgba(255, 255, 255, 0.52);
+    box-shadow:
+        inset 0 0.5px 0 rgba(255, 255, 255, 0.75),
+        inset 0 0 0 0.5px rgba(0, 0, 0, 0.08),
+        0 6px 18px rgba(0, 0, 0, 0.14);
+}
+
+body.imessage.imsg-c-liquidglass:not(.imsg-dark) .imsg-head-name {
+    color: #111;
+    background: rgba(255, 255, 255, 0.58);
+    box-shadow:
+        inset 0 0.5px 0 rgba(255, 255, 255, 0.8),
+        inset 0 0 0 0.5px rgba(0, 0, 0, 0.06);
+}
+
+body.imessage.imsg-c-liquidglass:not(.imsg-dark) #chat .mes > .imsg-stamp,
+body.imessage.imsg-c-liquidglass:not(.imsg-dark).imsg-receipts #chat .mes[data-imsg-receipt]::after,
+body.imessage.imsg-c-liquidglass:not(.imsg-dark) #chat .mes .name_text {
+    color: rgba(60, 60, 67, 0.82);
+    filter: drop-shadow(0 1px 1px rgba(255, 255, 255, 0.9)) drop-shadow(0 0 3px rgba(255, 255, 255, 0.6));
+}
+
+body.imessage.imsg-c-liquidglass:not(.imsg-dark) #nonQRFormItems {
+    background: rgba(255, 255, 255, 0.55) !important;
+    box-shadow:
+        inset 0 0.5px 0 rgba(255, 255, 255, 0.9),
+        inset 0 0 0 0.5px rgba(0, 0, 0, 0.08),
+        0 10px 30px rgba(0, 0, 0, 0.14) !important;
+}
+
+body.imessage.imsg-c-liquidglass:not(.imsg-dark) #leftSendForm,
+body.imessage.imsg-c-liquidglass:not(.imsg-dark) #rightSendForm > #send_but {
+    background: rgba(0, 0, 0, 0.08) !important;
+    color: #111 !important;
+    box-shadow: none;
+}
+
+body.imessage.imsg-c-liquidglass:not(.imsg-dark) #leftSendForm::after {
+    background-color: #111 !important;
+}
+
+body.imessage.imsg-c-liquidglass:not(.imsg-dark) #send_textarea,
+body.imessage.imsg-c-liquidglass:not(.imsg-dark) #send_textarea:focus {
+    color: #111 !important;
+    caret-color: #111 !important;
+}
+
+body.imessage.imsg-c-liquidglass:not(.imsg-dark) #send_textarea::placeholder {
+    color: rgba(0, 0, 0, 0.55) !important;
+}
+
+body.imessage.imsg-c-liquidglass:not(.imsg-dark):has(#send_textarea:not(:placeholder-shown)) #rightSendForm > #send_but {
+    background: var(--imsg-blue) !important;
+    color: #fff !important;
+}
+
+/* wide windows: keep the floating capsule a readable size instead of stretching it across */
+@media screen and (min-width: 1001px) {
+    body.imessage.imsg-c-liquidglass #nonQRFormItems {
+        max-width: 760px;
+        margin: 0 auto !important;
+    }
+}
+
+
+/* desktop keeps the compact macOS toolbar height: the 102px composition is for phones */
+@media screen and (min-width: 1001px) {
+    body.imessage.imsg-c-liquidglass #imsg-head {
+        height: 56px !important;
+        padding: 0 12px 0 20px !important;
+        background: linear-gradient(180deg, rgba(0, 0, 0, 0.26) 0%, rgba(0, 0, 0, 0.08) 70%, transparent 100%) !important;
+    }
+
+    body.imessage.imsg-c-liquidglass #imsg-head .imsg-back,
+    body.imessage.imsg-c-liquidglass .imsg-head-actions {
+        margin-top: 0;
+    }
+
+    body.imessage.imsg-c-liquidglass .imsg-head-who {
+        position: static;
+        flex-direction: row;
+        align-items: baseline;
+        gap: 6px;
+        padding: 4px 0;
+    }
+
+    body.imessage.imsg-c-liquidglass .imsg-head-name {
+        padding: 4px 10px 5px;
+        font-size: 13px;
+    }
+}

@@ -29,7 +29,7 @@ const FONTS = [
  * pale pink and sky blue bubbles floating on a photo, or the plain iOS blue.
  * Each one owns the bubble tokens and glass switches, so it never fights the other controls.
  */
-const PRESET_FLAGS = ['glassUI', 'acrylic', 'bubbleShadow'];
+const PRESET_FLAGS = ['liquidglass', 'acrylic', 'bubbleShadow'];
 
 const PRESET_KEYS = [
     '--imsg-bubble-out',
@@ -39,6 +39,12 @@ const PRESET_KEYS = [
     '--imsg-bubble-alpha',
     '--imsg-bubble-blur',
     '--imsg-focus',
+    '--imsg-bubble-radius',
+    '--imsg-text-bubble',
+    '--imsg-bubble-lh',
+    '--imsg-bubble-pad-x',
+    '--imsg-bubble-pad-y',
+    '--imsg-mes-gap',
 ];
 
 const PRESETS = [
@@ -99,36 +105,48 @@ const PRESETS = [
         flags: {},
     },
     {
-        name: 'glass',
-        label: 'iOS 毛玻璃',
-        swatch: ['rgba(10,132,255,0.55)', 'rgba(255,255,255,0.55)'],
+        name: 'liquid',
+        label: '液态玻璃',
+        swatch: ['#ffffff', '#2c2c2e'],
         tokens: {
-            '--imsg-bubble-out': '#0a84ff',
-            '--imsg-bubble-out-fg': '#ffffff',
-            '--imsg-bubble-in': '#ffffff',
-            '--imsg-bubble-in-fg': '#1c1c1e',
-            '--imsg-bubble-alpha': '70%',
-            '--imsg-bubble-blur': '24px',
-            '--imsg-focus': 'rgba(10, 132, 255, 0.42)',
+            '--imsg-bubble-out': '#ffffff',
+            '--imsg-bubble-out-fg': '#000000',
+            '--imsg-bubble-in': '#2c2c2e',
+            '--imsg-bubble-in-fg': '#ffffff',
+            '--imsg-bubble-alpha': '100%',
+            '--imsg-bubble-blur': '0px',
+            '--imsg-focus': 'rgba(255, 255, 255, 0.4)',
+            '--imsg-bubble-radius': '24px',
+            '--imsg-text-bubble': '17px',
+            '--imsg-bubble-lh': '1.36',
+            '--imsg-bubble-pad-x': '15px',
+            '--imsg-bubble-pad-y': '9px',
+            '--imsg-mes-gap': '5px',
         },
-        settings: { appearance: 'light', wallpaper: true, wallpaperBlur: 6, wallpaperDim: 8 },
-        flags: { glassUI: true, bubbleShadow: true },
+        settings: { appearance: 'dark', wallpaper: true, wallpaperBlur: 2, wallpaperDim: 30 },
+        flags: { liquidglass: true },
     },
     {
-        name: 'glass-dark',
-        label: '暗夜毛玻璃',
-        swatch: ['rgba(10,132,255,0.6)', 'rgba(60,60,64,0.6)'],
+        name: 'liquid-light',
+        label: '液态玻璃·浅色',
+        swatch: ['#ffffff', '#2c2c2e'],
         tokens: {
-            '--imsg-bubble-out': '#0a84ff',
-            '--imsg-bubble-out-fg': '#ffffff',
-            '--imsg-bubble-in': '#3a3a3e',
+            '--imsg-bubble-out': '#ffffff',
+            '--imsg-bubble-out-fg': '#000000',
+            '--imsg-bubble-in': '#2c2c2e',
             '--imsg-bubble-in-fg': '#ffffff',
-            '--imsg-bubble-alpha': '70%',
-            '--imsg-bubble-blur': '24px',
+            '--imsg-bubble-alpha': '100%',
+            '--imsg-bubble-blur': '0px',
             '--imsg-focus': 'rgba(10, 132, 255, 0.5)',
+            '--imsg-bubble-radius': '24px',
+            '--imsg-text-bubble': '17px',
+            '--imsg-bubble-lh': '1.36',
+            '--imsg-bubble-pad-x': '15px',
+            '--imsg-bubble-pad-y': '9px',
+            '--imsg-mes-gap': '5px',
         },
-        settings: { appearance: 'dark', wallpaper: true, wallpaperBlur: 12, wallpaperDim: 46 },
-        flags: { glassUI: true, bubbleShadow: true },
+        settings: { appearance: 'light', wallpaper: true, wallpaperBlur: 3, wallpaperDim: 18 },
+        flags: { liquidglass: true },
     },
 ];
 
@@ -198,7 +216,6 @@ const SECTIONS = [
             { token: '--imsg-bubble-alpha', label: 'Bubble opacity 气泡透明度', type: 'range', min: 10, max: 100, step: 1, unit: '%' },
             { token: '--imsg-bubble-blur', label: 'Bubble blur 气泡模糊', type: 'range', min: 0, max: 40, step: 1, unit: 'px' },
             { flag: 'acrylic', label: 'Acrylic glass 亚克力效果', type: 'toggle' },
-            { flag: 'glassUI', label: 'Frosted composer 毛玻璃输入条', type: 'toggle' },
             { flag: 'bubbleShadow', label: 'Bubble shadow 气泡阴影', type: 'toggle' },
             { setting: 'splitReplies', label: 'Split long replies 分段显示长回复', type: 'toggle' },
             { setting: 'imageLinks', label: 'Show image links as pictures 图片链接显示为图片', type: 'toggle' },
@@ -227,7 +244,7 @@ const SECTIONS = [
 ];
 
 const TOKEN_KEYS = new Set(SECTIONS.flatMap((section) => section.controls.filter((c) => c.token).flatMap((c) => [c.token, ...(c.also ?? [])])));
-const FLAG_KEYS = new Set(SECTIONS.flatMap((section) => section.controls.filter((c) => c.flag).map((c) => c.flag)));
+const FLAG_KEYS = new Set([...SECTIONS.flatMap((section) => section.controls.filter((c) => c.flag).map((c) => c.flag)), 'liquidglass']);
 
 let options = {
     setSetting: () => {},
@@ -420,9 +437,41 @@ function resetSection(section) {
     saveSettings();
 }
 
+/** Liquid Glass is the only scheme that takes over the wallpaper and appearance; remember what the
+ *  user had before, so picking another scheme afterwards does not strand them on a dark photo. */
+function rememberForLiquid(custom) {
+    if (custom.liquidBase) {
+        return;
+    }
+    const settings = getSettings();
+    custom.liquidBase = {
+        appearance: settings.appearance,
+        wallpaper: settings.wallpaper,
+        wallpaperBlur: settings.wallpaperBlur,
+        wallpaperDim: settings.wallpaperDim,
+    };
+}
+
+function restoreAfterLiquid(custom) {
+    const base = custom.liquidBase;
+    if (!base) {
+        return;
+    }
+    for (const [key, value] of Object.entries(base)) {
+        options.setSetting(key, value);
+    }
+    delete custom.liquidBase;
+}
+
 /** Paints a preset: its own bubble tokens and a couple of settings, then leaves everything else alone. */
 function applyPreset(preset) {
     const custom = state();
+    const leavingLiquid = custom.preset === 'liquid' || custom.preset === 'liquid-light';
+    if (preset.flags?.liquidglass) {
+        rememberForLiquid(custom);
+    } else if (leavingLiquid) {
+        restoreAfterLiquid(custom);
+    }
     for (const key of PRESET_KEYS) {
         delete custom.tokens[key];
     }
@@ -694,10 +743,12 @@ export function openCustomize() {
             return;
         }
         const custom = state();
+        restoreAfterLiquid(custom);
         custom.tokens = {};
         custom.flags = {};
         custom.css = '';
         custom.preset = '';
+        delete custom.liquidBase;
         applyCustomize();
         saveSettings();
         render();
@@ -718,6 +769,19 @@ export function openCustomize() {
 
 export function initCustomize(given) {
     options = { ...options, ...given };
+    // The first glass schemes were see-through bubbles; the Liquid Glass look is solid. Clear the
+    // old selection once so it does not leave a half-frosted palette behind.
+    const legacy = state();
+    if (legacy.preset === 'glass' || legacy.preset === 'glass-dark') {
+        for (const key of PRESET_KEYS) {
+            delete legacy.tokens[key];
+        }
+        for (const flag of ['glassUI', 'liquidglass', 'acrylic', 'bubbleShadow']) {
+            delete legacy.flags[flag];
+        }
+        delete legacy.preset;
+        saveSettings();
+    }
     onStart(applyCustomize);
     onStop(closePanel);
     document.addEventListener('keydown', whenOn((event) => {
