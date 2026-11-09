@@ -48,12 +48,29 @@
 1. 将全局强调色改为了深紫色，气泡和按键颜色重新进行了选择（原作者设置了可在主题内自由调整为喜欢的颜色）。
 
 ## 🍁 安装说明
+
+### 方式一：Git URL 一键安装（推荐）
+
+1. 打开酒馆：**扩展（积木图标）→ 安装扩展**。
+2. 在「输入扩展程序的 Git URL」里粘贴：
+
+   ```
+   https://github.com/liuyunyun1hao/SillyTavern-iMessage-Android
+   ```
+
+3. 「分支或标签名」留空（默认 `main`），点 **只给我安装**（或「给所有人安装」）。
+4. 安装完成后刷新酒馆，在扩展菜单里勾选 **iMessage Theme** 即可。
+
+后续升级：扩展菜单里点该扩展的 **更新**，或重复上面的地址重新安装。
+
+### 方式二：手动解压
+
 1. 下载最新的 `.zip` 压缩包。
-2. 解压得到 `SillyTavern-iMessage` 文件夹。
+2. 解压得到 `SillyTavern-iMessage-Android` 文件夹（仓库根目录就是扩展本体）。
 3. 将它放入酒馆目录：`data/default-user/extensions/third-party/`。
 4. 刷新酒馆，在扩展菜单中开启 `iMessage Theme` 即可。
 
-> 🍁🍁 **注意：** 千万别套娃！点进 `SillyTavern-iMessage` 文件夹必须直接看到 `css`、`src` 和 `index.js`。
+> 🍁🍁 **注意：** 千万别套娃！点进扩展文件夹必须直接看到 `manifest.json`、`css`、`src` 和 `index.js`。
 
 🚫**纯免费分享，严禁倒卖！**
 
@@ -95,12 +112,29 @@
 1. Changed the global accent color to a deep purple, and reselected the colors for bubbles and buttons (The original author designed it so users can freely adjust to their favorite colors within the theme).
 
 ## 🍁 Installation Instructions
+
+### Option A: install from the Git URL (recommended)
+
+1. Open SillyTavern → **Extensions → Install Extension**.
+2. Paste this URL:
+
+   ```
+   https://github.com/liuyunyun1hao/SillyTavern-iMessage-Android
+   ```
+
+3. Leave the branch field empty (defaults to `main`), then click **Install just for me** (or **Install for all users**).
+4. Refresh SillyTavern and enable `iMessage Theme` in the extensions menu.
+
+To upgrade later, use the extension's **Update** button.
+
+### Option B: manual zip
+
 1. Download the latest `.zip` archive.
-2. Extract it to get the `SillyTavern-iMessage` folder.
+2. Extract it to get the `SillyTavern-iMessage-Android` folder (the repository root IS the extension).
 3. Place it into the SillyTavern directory: `data/default-user/extensions/third-party/`.
 4. Refresh SillyTavern and enable `iMessage Theme` in the extensions menu.
 
-> 🍁🍁 **Warning:** Do NOT nest the folders! When you click into the `SillyTavern-iMessage` folder, you must directly see the `css`, `src`, and `index.js`.
+> 🍁🍁 **Warning:** Do NOT nest the folders! When you click into the extension folder, you must directly see the `manifest.json`, `css`, `src`, and `index.js`.
 
 🚫**Completely free to share, strictly prohibited from reselling!**
 
