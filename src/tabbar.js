@@ -147,11 +147,29 @@ function buildMe() {
     scroll.append(group([
         row({
             icon: 'bubble', color: '#0a84ff', label: 'Chat History 聊天记录',
-            run: () => { hideMe(); clickOption('option_select_chat'); },
+            run: () => {
+                // 没选角色时 SillyTavern 只会弹「Assistant not found」，这里先说清楚要做什么
+                if (SillyTavern.getContext().characterId == null) {
+                    toastr.info(t('Pick a character first, then its chats are listed here.'), t('No character chosen'));
+                    return;
+                }
+                hideMe();
+                clickOption('option_select_chat');
+            },
         }),
     ]));
 
-    scroll.append(element('p', 'imsg-me-ver', 'iMessage Theme · v1.0.1'));
+    const version = element('p', 'imsg-me-ver', 'iMessage Theme');
+    scroll.append(version);
+    // 版本号跟着 manifest.json 走，升级后不会在界面上留下旧号
+    fetch(new URL('../manifest.json', import.meta.url))
+        .then((response) => (response.ok ? response.json() : null))
+        .then((manifest) => {
+            if (manifest?.version) {
+                version.textContent = `iMessage Theme · v${manifest.version}`;
+            }
+        })
+        .catch(() => {});
     root.append(bar, scroll);
     document.body.append(root);
     return root;

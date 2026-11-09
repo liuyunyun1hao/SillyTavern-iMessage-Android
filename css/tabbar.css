@@ -115,6 +115,7 @@ body.imessage .imsg-me-bar h1 {
 }
 
 body.imessage .imsg-me-edit {
+    position: relative;
     margin: 0 0 4px;
     padding: 0;
     border: 0;
@@ -122,6 +123,13 @@ body.imessage .imsg-me-edit {
     color: var(--imsg-blue);
     font: 400 15px/1.2 var(--imsg-font);
     cursor: pointer;
+}
+
+/* 文字按钮只有 18px 高，把可点区域撑到 42px，视觉和排版都不动 */
+body.imessage .imsg-me-edit::after {
+    content: '';
+    position: absolute;
+    inset: -12px;
 }
 
 body.imessage .imsg-me-scroll {

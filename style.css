@@ -17,6 +17,9 @@
 @import url("css/wallpaper.css");
 @import url("css/contacts.css");
 @import url("css/panes.css");
+@import url("css/extension-inherit.css");
+@import url("css/extension-chips.css");
+@import url("css/extension-places.css");
 @import url("css/customize.css");
 @import url("css/tabbar.css");
 @import url("css/liquid.css");

@@ -10,7 +10,8 @@ body.imessage.imsg-wall #bg1 {
     top: calc(var(--imsg-wall-blur) * -2);
     bottom: calc(var(--imsg-wall-blur) * -2);
     left: calc(var(--imsg-content-left) - var(--imsg-wall-blur) * 2);
-    right: calc(var(--imsg-wall-blur) * -2);
+    /* 右边贴着窗口边：再向外溢出去只会把整页撑宽，模糊边缘本来也在视口外 */
+    right: 0;
     width: auto !important;
     height: auto !important;
     background-attachment: scroll;

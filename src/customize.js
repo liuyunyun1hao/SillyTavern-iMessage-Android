@@ -201,8 +201,6 @@ const SECTIONS = [
             { flag: 'hideVideo', label: 'Hide the video button 隐藏视频按钮', type: 'toggle' },
             { flag: 'hideStamps', label: 'Hide times between messages 隐藏时间戳', type: 'toggle' },
             { flag: 'hideNames', label: 'Hide names in groups 隐藏群组名字', type: 'toggle' },
-            { flag: 'hideTapbacks', label: 'Hide tapbacks 隐藏表情回应', type: 'toggle' },
-            { flag: 'hideJump', label: 'Hide the jump to latest button 隐藏跳转按钮', type: 'toggle' },
             { setting: 'receipts', label: 'Delivered and Read 已送达和已读', type: 'toggle' },
             { setting: 'typing', label: 'Typing bubble 输入气泡', type: 'toggle' },
         ],

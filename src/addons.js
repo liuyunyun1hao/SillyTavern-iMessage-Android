@@ -10,7 +10,7 @@ import { button, context, element, escapeHtml, glyph, isPhone, overlayOpen, t } 
 
 const ROOT_ID = 'imsg-extensions';
 const MANAGE = '__manage__';
-const TILE_COLORS = ['#e6e6e6', '#e6e6e6', '#e6e6e6', '#e6e6e6', '#e6e6e6', '#e6e6e6', '#e6e6e6', '#e6e6e6', '#e6e6e6', '#e6e6e6'];
+const TILE_COLORS = ['#0a84ff', '#30b0c7', '#34c759', '#ff9f0a', '#ff375f', '#bf5af2', '#5e5ce6', '#8e8e93', '#64d2ff', '#ac8e68'];
 
 let view = { key: MANAGE, level: 0, needle: '' };
 let needsReload = false;

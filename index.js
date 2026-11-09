@@ -107,6 +107,24 @@ function disable() {
 
 async function init() {
     initialized = true;
+    // 启动分两步：先装主题的各个部件，再挂设置面板。任何一步出错都要掀掉开机遮罩，
+    // 否则用户会永远停在全屏的 loading 盖子里，连设置面板都打不开。
+    try {
+        await startParts();
+    } catch (error) {
+        console.error('[iMessage] Could not start the theme', error);
+    } finally {
+        endBoot();
+    }
+    try {
+        await mountSettings();
+    } catch (error) {
+        console.error('[iMessage] Could not render the settings panel', error);
+    }
+}
+
+/** Registers the theme and builds its parts; the list of recent chats loads alongside. */
+async function startParts() {
     applySettings();
     exclusive = registerTheme({
         id: 'imessage',
@@ -151,36 +169,35 @@ async function init() {
         eventSource.on(type, refreshTitle);
     }
     onChatChanged(getCurrentChatId());
+    // The list may take a while (or fail) on a slow phone; the cover lifts on its own timer anyway.
     await Promise.race([listLoaded, delay(3000)]);
-    endBoot();
+}
 
-    try {
-        await renderPanel({
-            folder: EXTENSION_FOLDER,
-            apply: applySettings,
-            after: {
-                enabled: () => {
-                    refreshMessages();
-                    if (getSettings().enabled) {
-                        exclusive?.activated();
-                        reloadWhenOn('iMessage is on.');
-                    } else {
-                        exclusive?.changed();
-                    }
-                },
-                pauseUserTheme: () => exclusive?.changed(),
-                recentMax: () => scheduleRefresh(),
-                splitReplies: () => {
-                    resetSplits();
-                    refreshMessages();
-                },
-                // turning it off redraws the messages, so the links come back as text
-                imageLinks: () => SillyTavern.getContext().reloadCurrentChat(),
+/** Draws the extension's settings block in the app's Extensions drawer. */
+async function mountSettings() {
+    await renderPanel({
+        folder: EXTENSION_FOLDER,
+        apply: applySettings,
+        after: {
+            enabled: () => {
+                refreshMessages();
+                if (getSettings().enabled) {
+                    exclusive?.activated();
+                    reloadWhenOn('iMessage is on.');
+                } else {
+                    exclusive?.changed();
+                }
             },
-        });
-    } catch (error) {
-        console.error('[iMessage] Could not render the settings panel', error);
-    }
+            pauseUserTheme: () => exclusive?.changed(),
+            recentMax: () => scheduleRefresh(),
+            splitReplies: () => {
+                resetSplits();
+                refreshMessages();
+            },
+            // turning it off redraws the messages, so the links come back as text
+            imageLinks: () => SillyTavern.getContext().reloadCurrentChat(),
+        },
+    });
 }
 
 /**

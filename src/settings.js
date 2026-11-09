@@ -4,16 +4,16 @@
 import { openPanes, redrawPanes } from './panes.js';
 import { context, t } from './dom.js';
 
-const BLUE = '#e6e6e6';
-const GREEN = '#e6e6e6';
-const ORANGE = '#e6e6e6';
-const RED = '#e6e6e6';
-const PURPLE = '#e6e6e6';
-const INDIGO = '#e6e6e6';
-const TEAL = '#e6e6e6';
-const PINK = '#e6e6e6';
-const GRAY = '#e6e6e6';
-const BROWN = '#e6e6e6';
+const BLUE = '#0a84ff';
+const GREEN = '#34c759';
+const ORANGE = '#ff9f0a';
+const RED = '#ff375f';
+const PURPLE = '#bf5af2';
+const INDIGO = '#5e5ce6';
+const TEAL = '#30b0c7';
+const PINK = '#ff6482';
+const GRAY = '#8e8e93';
+const BROWN = '#ac8e68';
 
 // The app's nodes never go away, so each is looked up once and remembered: while a section is open
 // its nodes sit in the window rather than where a selector would look for them.

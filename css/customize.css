@@ -275,9 +275,7 @@ body.imessage.imsg-c-hideSearch .imsg-search,
 body.imessage.imsg-c-hidePreviews .imsg-row-preview,
 body.imessage.imsg-c-hideVideo .imsg-head-video,
 body.imessage.imsg-c-hideStamps #chat .mes > .imsg-stamp,
-body.imessage.imsg-c-hideNames #chat .mes .name_text,
-body.imessage.imsg-c-hideTapbacks #chat .imsg-tapback,
-body.imessage.imsg-c-hideJump #imsg-jump {
+body.imessage.imsg-c-hideNames #chat .mes .name_text {
     display: none !important;
 }
 
