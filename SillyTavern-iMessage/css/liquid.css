@@ -90,26 +90,20 @@ body.imessage.imsg-c-liquidglass #chat .imsg-parts {
     gap: var(--imsg-mes-gap, 5px);
 }
 
-/* the white bubble needs a hairline and a little lift on a bright photo */
-body.imessage.imsg-c-liquidglass #chat .mes[is_user="true"] .mes_block,
-body.imessage.imsg-c-liquidglass #chat .mes[is_user="true"] .imsg-part {
-    box-shadow:
-        0 0 0 0.5px rgba(0, 0, 0, 0.10),
-        0 1px 3px rgba(0, 0, 0, 0.16),
-        0 8px 20px rgba(0, 0, 0, 0.16);
-}
-
-/* the charcoal bubble gets a faint inner rim so it separates from a dark wallpaper */
-body.imessage.imsg-c-liquidglass #chat .mes:not([is_user="true"]) .imsg-part,
-body.imessage.imsg-c-liquidglass #chat .mes:not([is_user="true"]) .mes_block {
-    box-shadow:
-        inset 0 0 0 0.5px rgba(255, 255, 255, 0.07),
-        0 1px 3px rgba(0, 0, 0, 0.18),
-        0 8px 20px rgba(0, 0, 0, 0.14);
+/* Liquid Glass bubbles are flat colour: no rim, no outline, no lifted shadow.
+   Glass is reserved for controls (header buttons, name pill, composer). */
+body.imessage.imsg-c-liquidglass #chat .mes .mes_block,
+body.imessage.imsg-c-liquidglass #chat .mes .imsg-part {
+    box-shadow: none !important;
 }
 
 body.imessage.imsg-c-liquidglass #chat .mes.imsg-last:not(.imsg-sys) .mes_block::before {
-    filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.1));
+    filter: none;
+}
+
+/* a short chat starts right under the header instead of being pushed to the bottom */
+body.imessage.imsg-c-liquidglass #chat > .mes:first-child {
+    margin-top: 0 !important;
 }
 
 /* timestamps and receipts sit on the picture as quiet text, not as frosted pills */
@@ -285,6 +279,11 @@ body.imessage.imsg-c-liquidglass:not(.imsg-dark):has(#send_textarea:not(:placeho
         padding: 4px 10px 5px;
         font-size: 13px;
     }
+
+    /* the toolbar already occupies its own row on desktop; keep a small, even gap under it */
+    body.imessage.imsg-c-liquidglass #chat {
+        margin-top: 8px;
+    }
 }
 
 /* ---- phone header is a three-column grid: the back button, the centred contact, and the two
@@ -354,7 +353,7 @@ body.imessage.imsg-c-liquidglass:not(.imsg-dark):has(#send_textarea:not(:placeho
     /* the scrollport itself starts below the header, so a half-scrolled bubble is clipped in the
        gap rather than against the floating controls */
     body.imessage.imsg-c-liquidglass #chat {
-        margin-top: 14px;
+        margin-top: 8px;
         padding-top: 0;
         scroll-padding-top: 0;
     }
