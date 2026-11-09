@@ -9,6 +9,7 @@ import { monogramize } from './monograms.js';
 import { openCustomize } from './customize.js';
 import { clickOption, openAppearanceMenu, openPanelById } from './shell.js';
 import { onStart, onStop } from './power.js';
+import { BUILD } from './build.js';
 
 const BAR_ID = 'imsg-tabbar';
 const ME_ID = 'imsg-me';
@@ -214,17 +215,9 @@ function buildMe() {
         }),
     ]));
 
-    const version = element('p', 'imsg-me-ver', 'iMessage Theme');
+    // 版本号跟着真正加载的 JS 走：缓存的旧模块不会冒充新版本
+    const version = element('p', 'imsg-me-ver', `iMessage Theme · v${BUILD}`);
     scroll.append(version);
-    // 版本号跟着 manifest.json 走，升级后不会在界面上留下旧号
-    fetch(new URL('../manifest.json', import.meta.url))
-        .then((response) => (response.ok ? response.json() : null))
-        .then((manifest) => {
-            if (manifest?.version) {
-                version.textContent = `iMessage Theme · v${manifest.version}`;
-            }
-        })
-        .catch(() => {});
     root.append(bar, scroll);
     document.body.append(root);
     return root;

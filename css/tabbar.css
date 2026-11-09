@@ -83,8 +83,8 @@ body.imessage.imsg-tabs #form_sheld {
 body.imessage .imsg-me {
     position: fixed;
     z-index: 2999;
-    /* 底边贴着悬浮底栏的上沿（58px 胶囊 + 10px 间距），中间不留一条白缝 */
-    inset: 0 0 calc(env(safe-area-inset-bottom, 0px) + 68px);
+    /* 铺满整个视口：悬浮胶囊底栏下面和两侧不能透出上一页的列表 */
+    inset: 0;
     display: flex;
     flex-direction: column;
     background: var(--imsg-sheet);
@@ -132,7 +132,7 @@ body.imessage .imsg-me-scroll {
     min-height: 0;
     overflow-y: auto;
     overscroll-behavior: contain;
-    padding: 4px 16px calc(20px + env(safe-area-inset-bottom, 0px));
+    padding: 4px 16px calc(var(--imsg-tabbar-h, 76px) + 12px);
     scrollbar-width: none;
 }
 

@@ -146,57 +146,85 @@ export function newMessage() {
     openContacts({ pick: true });
 }
 
-/** 输入框左侧的加号：直接开主题自己的菜单。
- *  酒馆原生 #options_button 在部分安卓浏览器里会因为「点击后没有 :hover」被它自己收起，
- *  这里不再经过它，而是用和右上角 ⓘ 完全一样的那份聊天选项。 */
-let plusHandledAt = 0;
+/** 输入框左侧的加号：开主题自己的聊天选项菜单。
+ *  不挂在 #leftSendForm 这个节点上：有的整合包/扩展会在启动后重建发送栏，挂旧节点上的监听
+ *  会一起消失；这里挂在 document 上，用坐标判断这一下是不是点在加号里，节点换了也照样有效。 */
+const PLUS_PAD = 10;
 let plusDown = null;
+let plusHandledAt = 0;
+let plusWatching = false;
+
+function composerPlusBox() {
+    const left = document.getElementById('leftSendForm');
+    if (!left) {
+        return null;
+    }
+    const box = left.getBoundingClientRect();
+    return box.width > 0 && box.height > 0 ? box : null;
+}
+
+function inComposerPlus(event) {
+    const box = composerPlusBox();
+    if (!box) {
+        return false;
+    }
+    const point = event.changedTouches?.[0] ?? event;
+    if (typeof point.clientX !== 'number') {
+        return false;
+    }
+    return point.clientX >= box.left - PLUS_PAD && point.clientX <= box.right + PLUS_PAD
+        && point.clientY >= box.top - PLUS_PAD && point.clientY <= box.bottom + PLUS_PAD;
+}
 
 function watchComposerPlus() {
-    const left = document.getElementById('leftSendForm');
     const button = document.getElementById('options_button');
-    if (!left) {
-        return;
-    }
     if (button) {
         button.setAttribute('role', 'button');
         button.setAttribute('aria-label', t('Chat Options 聊天选项'));
         button.setAttribute('title', t('Chat Options 聊天选项'));
     }
-    if (left.dataset.imsgPlus === '1') {
+    if (plusWatching) {
         return;
     }
-    left.dataset.imsgPlus = '1';
-    left.addEventListener('pointerdown', (event) => {
-        plusDown = { x: event.clientX, y: event.clientY, at: performance.now() };
+    plusWatching = true;
+
+    document.addEventListener('pointerdown', (event) => {
+        if (isOn() && inComposerPlus(event)) {
+            const point = event.changedTouches?.[0] ?? event;
+            plusDown = { x: point.clientX, y: point.clientY, at: performance.now() };
+        }
     }, true);
+
     const open = (event) => {
-        if (!isOn()) {
+        if (!isOn() || !inComposerPlus(event)) {
             return;
         }
-        // 一律挡下来：酒馆原生菜单不参与，避免两个菜单互相打架
+        const point = event.changedTouches?.[0] ?? event;
+        const moved = plusDown ? Math.hypot(point.clientX - plusDown.x, point.clientY - plusDown.y) : 0;
+        const quick = plusDown ? performance.now() - plusDown.at : 0;
+        // 这一下已经确定是点加号：挡在酒馆的原生菜单和其他处理器之前
         event.preventDefault();
         event.stopPropagation();
         event.stopImmediatePropagation();
-        if (event.type === 'pointerup') {
-            const moved = plusDown && Math.hypot(event.clientX - plusDown.x, event.clientY - plusDown.y);
-            if (!plusDown || moved > 12 || performance.now() - plusDown.at > 700) {
-                return;
-            }
+        // 手指拖动过（在滚动）或者按太久，不当作点击
+        if (event.type !== 'click' && (!plusDown || moved > 12 || quick > 800)) {
+            return;
         }
         const now = performance.now();
-        if (now - plusHandledAt < 420) {
+        if (now - plusHandledAt < 450) {
             return;
         }
         plusHandledAt = now;
         const items = chatOptionItems();
-        if (items.length) {
-            toggleMenu(left, items);
+        const anchor = document.getElementById('leftSendForm');
+        if (items.length && anchor) {
+            toggleMenu(anchor, items);
         }
     };
-    // pointerup 在前：个别套壳 WebView 里这层 div 不一定收到 click，pointerup 一定会有
-    left.addEventListener('pointerup', open, true);
-    left.addEventListener('click', open, true);
+
+    document.addEventListener('pointerup', open, true);
+    document.addEventListener('touchend', open, true);
+    document.addEventListener('click', open, true);
 }
 
 function closeMenu() {
