@@ -19,8 +19,8 @@ body.imessage.imsg-c-liquidglass .imsg-head-actions .imsg-sym-button {
     border-radius: 50%;
     color: #fff;
     background: rgba(28, 28, 30, 0.32);
-    -webkit-backdrop-filter: blur(22px) saturate(1.8);
-    backdrop-filter: blur(22px) saturate(1.8);
+    -webkit-backdrop-filter: blur(22px) saturate(1.8) !important;
+    backdrop-filter: blur(22px) saturate(1.8) !important;
     box-shadow:
         inset 0 0.5px 0 rgba(255, 255, 255, 0.32),
         inset 0 0 0 0.5px rgba(255, 255, 255, 0.22),
@@ -57,8 +57,8 @@ body.imessage.imsg-c-liquidglass .imsg-head-name {
     font-weight: 600;
     line-height: 1;
     background: rgba(28, 28, 30, 0.38);
-    -webkit-backdrop-filter: blur(18px) saturate(1.6);
-    backdrop-filter: blur(18px) saturate(1.6);
+    -webkit-backdrop-filter: blur(18px) saturate(1.6) !important;
+    backdrop-filter: blur(18px) saturate(1.6) !important;
     box-shadow:
         inset 0 0.5px 0 rgba(255, 255, 255, 0.24),
         inset 0 0 0 0.5px rgba(255, 255, 255, 0.16);
@@ -192,8 +192,8 @@ body.imessage.imsg-c-liquidglass:not(.imsg-dark) .imsg-head-actions .imsg-sym-bu
     background: rgba(255, 255, 255, 0.52);
     box-shadow:
         inset 0 0.5px 0 rgba(255, 255, 255, 0.75),
-        inset 0 0 0 0.5px rgba(0, 0, 0, 0.08),
-        0 6px 18px rgba(0, 0, 0, 0.14);
+        inset 0 0 0 0.5px rgba(0, 0, 0, 0.12),
+        0 6px 18px rgba(0, 0, 0, 0.22);
 }
 
 body.imessage.imsg-c-liquidglass:not(.imsg-dark) .imsg-head-name {
@@ -201,7 +201,8 @@ body.imessage.imsg-c-liquidglass:not(.imsg-dark) .imsg-head-name {
     background: rgba(255, 255, 255, 0.58);
     box-shadow:
         inset 0 0.5px 0 rgba(255, 255, 255, 0.8),
-        inset 0 0 0 0.5px rgba(0, 0, 0, 0.06);
+        inset 0 0 0 0.5px rgba(0, 0, 0, 0.12),
+        0 4px 14px rgba(0, 0, 0, 0.18);
 }
 
 body.imessage.imsg-c-liquidglass:not(.imsg-dark) #chat .mes > .imsg-stamp,
@@ -256,10 +257,34 @@ body.imessage.imsg-c-liquidglass:not(.imsg-dark):has(#send_textarea:not(:placeho
 
 /* desktop keeps the compact macOS toolbar height: the 102px composition is for phones */
 @media screen and (min-width: 1001px) {
+    /* desktop toolbar floats over the transcript in the same way as the phone header */
     body.imessage.imsg-c-liquidglass #imsg-head {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 35;
         height: 56px !important;
         padding: 0 12px 0 20px !important;
-        background: linear-gradient(180deg, rgba(0, 0, 0, 0.26) 0%, rgba(0, 0, 0, 0.08) 70%, transparent 100%) !important;
+        background: transparent !important;
+        isolation: isolate;
+    }
+
+    body.imessage.imsg-c-liquidglass #imsg-head::before {
+        content: '';
+        position: absolute;
+        inset: 0 0 -10px;
+        z-index: -1;
+        pointer-events: none;
+        background: linear-gradient(180deg, rgba(28, 28, 30, 0.42) 0%, rgba(28, 28, 30, 0.18) 55%, transparent 100%);
+        -webkit-backdrop-filter: blur(18px) saturate(1.7) !important;
+        backdrop-filter: blur(18px) saturate(1.7) !important;
+        -webkit-mask-image: linear-gradient(180deg, #000 0%, #000 55%, transparent 100%);
+        mask-image: linear-gradient(180deg, #000 0%, #000 55%, transparent 100%);
+    }
+
+    body.imessage.imsg-c-liquidglass:not(.imsg-dark) #imsg-head::before {
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.42) 0%, rgba(255, 255, 255, 0.16) 55%, transparent 100%);
     }
 
     body.imessage.imsg-c-liquidglass #imsg-head .imsg-back,
@@ -280,9 +305,12 @@ body.imessage.imsg-c-liquidglass:not(.imsg-dark):has(#send_textarea:not(:placeho
         font-size: 13px;
     }
 
-    /* the toolbar already occupies its own row on desktop; keep a small, even gap under it */
+    /* the scrollport starts at the top and pays the toolbar height as padding, so a scrolled
+       message glides under the glass instead of being cut by a separate row */
     body.imessage.imsg-c-liquidglass #chat {
-        margin-top: 8px;
+        margin-top: 0;
+        padding-top: 64px;
+        scroll-padding-top: 64px;
     }
 }
 
@@ -290,7 +318,13 @@ body.imessage.imsg-c-liquidglass:not(.imsg-dark):has(#send_textarea:not(:placeho
    action buttons all share one baseline. The chat starts below the header instead of sliding
    under it, so a scrolled message is never sliced by the floating controls. ---- */
 @media screen and (max-width: 1000px) {
+    /* the header floats over the scrollport; messages pass underneath the glass */
     body.imessage.imsg-c-liquidglass #imsg-head {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 35;
         display: grid;
         grid-template-columns: 92px minmax(0, 1fr) 92px;
         grid-template-rows: 58px auto;
@@ -300,6 +334,26 @@ body.imessage.imsg-c-liquidglass:not(.imsg-dark):has(#send_textarea:not(:placeho
         align-content: start;
         height: calc(102px + var(--imsg-safe-top, 0px)) !important;
         padding: calc(var(--imsg-safe-top, 0px) + 6px) 10px 0 !important;
+        background: transparent !important;
+        isolation: isolate;
+    }
+
+    /* a fading liquid-glass veil, not a solid bar: it disappears before the first bubble */
+    body.imessage.imsg-c-liquidglass #imsg-head::before {
+        content: '';
+        position: absolute;
+        inset: 0 0 -16px;
+        z-index: -1;
+        pointer-events: none;
+        background: linear-gradient(180deg, rgba(28, 28, 30, 0.34) 0%, rgba(28, 28, 30, 0.14) 55%, transparent 100%);
+        -webkit-backdrop-filter: blur(20px) saturate(1.7) !important;
+        backdrop-filter: blur(20px) saturate(1.7) !important;
+        -webkit-mask-image: linear-gradient(180deg, #000 0%, #000 55%, transparent 100%);
+        mask-image: linear-gradient(180deg, #000 0%, #000 55%, transparent 100%);
+    }
+
+    body.imessage.imsg-c-liquidglass:not(.imsg-dark) #imsg-head::before {
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.28) 0%, rgba(255, 255, 255, 0.10) 55%, transparent 100%);
     }
 
     body.imessage.imsg-c-liquidglass #imsg-head .imsg-back {
@@ -353,8 +407,8 @@ body.imessage.imsg-c-liquidglass:not(.imsg-dark):has(#send_textarea:not(:placeho
     /* the scrollport itself starts below the header, so a half-scrolled bubble is clipped in the
        gap rather than against the floating controls */
     body.imessage.imsg-c-liquidglass #chat {
-        margin-top: 8px;
-        padding-top: 0;
-        scroll-padding-top: 0;
+        margin-top: 0;
+        padding-top: calc(102px + var(--imsg-safe-top, 0px) + 8px);
+        scroll-padding-top: calc(102px + var(--imsg-safe-top, 0px) + 8px);
     }
 }
