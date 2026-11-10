@@ -94,24 +94,29 @@ body.imessage .imsg-me {
 
 body.imessage .imsg-me-bar {
     flex: none;
+    display: block;
+    padding: var(--imsg-safe-top, 0px) 16px 0;
+    background: transparent;
+    border-bottom: 0;
+}
+
+body.imessage .imsg-me-actions {
     display: flex;
-    align-items: flex-end;
-    justify-content: space-between;
-    gap: 10px;
-    padding: calc(env(safe-area-inset-top, 0px) + 10px) 16px 8px;
-    background: var(--imsg-toolbar);
-    border-bottom: 0.5px solid var(--imsg-line);
+    align-items: center;
+    justify-content: flex-end;
+    height: 44px;
 }
 
 body.imessage .imsg-me-bar h1 {
     margin: 0;
-    font: 700 30px/1.15 var(--imsg-font);
-    letter-spacing: -0.02em;
+    padding: 0 0 6px;
+    font: 700 34px/41px var(--imsg-font-display);
+    letter-spacing: -0.01em;
 }
 
 body.imessage .imsg-me-edit {
     position: relative;
-    margin: 0 0 4px;
+    margin: 0;
     padding: 0;
     border: 0;
     background: none;
@@ -246,6 +251,7 @@ body.imessage .imsg-me-ico .imsg-sym {
 }
 
 body.imessage .imsg-me-label {
+    font-size: 17px;
     flex: 1 1 auto;
     min-width: 0;
     overflow: hidden;

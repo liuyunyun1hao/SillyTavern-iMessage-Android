@@ -96,11 +96,6 @@ body.imessage .imsg-me-bar {
     backdrop-filter: none;
 }
 
-body.imessage .imsg-me-bar h1 {
-    font-size: 28px;
-    letter-spacing: -0.02em;
-}
-
 /* ── 底栏：浮起来的玻璃胶囊，不再贴着屏幕底边 ── */
 
 body.imessage {
@@ -808,5 +803,169 @@ body.imessage .imsg-cn-members .imsg-cn-member {
 @media screen and (max-width: 1000px) {
     body.imessage .imsg-cn.imsg-cn-modal:not(.imsg-cn-page) .imsg-cn-side {
         padding-bottom: env(safe-area-inset-bottom, 0px);
+    }
+}
+
+/* ── 三个一级页面共用一套页头规范 ──
+   动作行（44px，右上对齐）→ 34px 大标题 → 搜索（聊天/联系人）。
+   联系人一级页面从弹窗顶栏切换成这一套；弹窗本身仍用原来的居中导航栏。 */
+@media screen and (max-width: 1000px) {
+    body.imessage .imsg-cn.imsg-cn-page .imsg-page-head {
+        flex: none;
+        padding: var(--imsg-safe-top, 0px) 16px 0;
+    }
+
+    body.imessage .imsg-cn.imsg-cn-page .imsg-page-actions {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 8px;
+        height: 44px;
+    }
+
+    body.imessage .imsg-cn.imsg-cn-page .imsg-page-title {
+        margin: 0;
+        padding: 0 0 6px;
+        color: var(--imsg-fg);
+        font-family: var(--imsg-font-display);
+        font-size: 34px;
+        line-height: 41px;
+        font-weight: 700;
+        letter-spacing: -0.01em;
+    }
+
+    /* 搜索框：和聊天页同一个尺寸、圆角与底色 */
+    body.imessage .imsg-cn.imsg-cn-page .imsg-cn-search {
+        height: 36px;
+        margin: 0 16px 10px;
+        padding: 0 8px;
+        gap: 5px;
+        border: 0.5px solid var(--g26-edge);
+        border-radius: 10px;
+        background: var(--g26-solid, rgba(250, 250, 252, 0.97));
+        box-shadow: none;
+    }
+
+    body.imessage .imsg-cn.imsg-cn-page .imsg-cn-search input {
+        font-size: 17px;
+    }
+
+    body.imessage .imsg-cn.imsg-cn-page .imsg-cn-search .imsg-glyph {
+        width: 16px;
+        height: 16px;
+    }
+
+    /* 动作按钮：和聊天页的写信按钮同一尺寸与描边 */
+    body.imessage .imsg-cn.imsg-cn-page :is(.imsg-cn-sort, .imsg-cn-add-menu) {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        height: 32px;
+        min-width: 32px;
+        padding: 0 11px;
+        border: 0.5px solid var(--imsg-line);
+        border-radius: 999px;
+        background: var(--imsg-field);
+        color: var(--imsg-fg);
+        font-size: 13px;
+        font-weight: 500;
+        box-shadow: none;
+    }
+
+    body.imessage.imsg-dark .imsg-cn.imsg-cn-page :is(.imsg-cn-sort, .imsg-cn-add-menu) {
+        background: var(--imsg-sheet);
+    }
+
+    body.imessage .imsg-cn.imsg-cn-page .imsg-cn-add-menu {
+        width: 32px;
+        padding: 0;
+        color: var(--imsg-blue);
+    }
+
+    /* 列表排版向聊天页看齐：名字 17px/600，分组标题更紧凑 */
+    body.imessage .imsg-cn.imsg-cn-page .imsg-cn-row-name {
+        font-weight: 600;
+    }
+
+    body.imessage .imsg-cn.imsg-cn-page .imsg-cn-section-title {
+        padding: 14px 16px 6px;
+        font-size: 12.5px;
+        font-weight: 600;
+        letter-spacing: 0.02em;
+    }
+
+    /* 聊天页的写信按钮也做成同样的圆钮 */
+    body.imessage .imsg-side-bar .imsg-compose {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: var(--imsg-field);
+        box-shadow: inset 0 0 0 0.5px var(--imsg-line);
+        color: var(--imsg-blue);
+        --imsg-sym-size: 20px;
+    }
+
+    body.imessage.imsg-dark .imsg-side-bar .imsg-compose {
+        background: var(--imsg-sheet);
+    }
+}
+
+/* 联系人一级页面：卡片与搜索框同一条 16px 边线，圆角/次级文字向聊天页看齐 */
+@media screen and (max-width: 1000px) {
+    body.imessage .imsg-cn.imsg-cn-page .imsg-cn-section {
+        margin: 0 16px 12px;
+    }
+
+    body.imessage .imsg-cn.imsg-cn-page .imsg-cn-scroll > .imsg-cn-row {
+        margin: 8px 16px 10px;
+    }
+
+    body.imessage .imsg-cn.imsg-cn-page .imsg-cn-row-name b {
+        font-weight: 600;
+    }
+
+    body.imessage .imsg-cn.imsg-cn-page .imsg-cn-me-text b {
+        font-size: 17px;
+        font-weight: 600;
+    }
+
+    body.imessage .imsg-cn.imsg-cn-page .imsg-cn-me-text small {
+        font-size: 15px;
+    }
+
+    body.imessage .imsg-cn.imsg-cn-page .imsg-cn-tags {
+        padding: 0 16px 8px;
+        gap: 8px;
+    }
+
+    body.imessage .imsg-cn.imsg-cn-page .imsg-cn-tag {
+        height: 28px;
+        padding: 0 12px;
+        border-radius: 999px;
+        font-size: 13.5px;
+    }
+
+    /* 「我的」的分组卡片与联系人卡片同圆角 */
+    body.imessage .imsg-me-group {
+        border-radius: 14px;
+    }
+}
+
+/* 一级页面的列表节奏：单行列表统一 64px，分组标题用轻量灰字 */
+@media screen and (max-width: 1000px) {
+    body.imessage .imsg-cn.imsg-cn-page .imsg-cn-row {
+        min-height: 64px;
+    }
+
+    body.imessage .imsg-cn.imsg-cn-page .imsg-cn-section-title {
+        padding: 12px 16px 6px;
+        color: var(--imsg-label);
+        font-size: 13px;
+        font-weight: 500;
+        letter-spacing: 0.02em;
+    }
+
+    body.imessage .imsg-me-row {
+        min-height: 64px;
     }
 }

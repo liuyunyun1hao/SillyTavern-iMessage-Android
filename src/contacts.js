@@ -1623,7 +1623,16 @@ function buildWindow(instance) {
     sort.title = t(v.sort === 'recent' ? 'Sort by recent 按最近' : 'Sort by name 按字母');
     const tools = element('span', 'imsg-cn-tools');
     tools.append(sort, add);
-    bar.append(page ? element('span') : done, element('h1', 'imsg-cn-title', t(pick ? 'New Message' : 'Contacts')), pick ? element('span') : tools);
+    let head = bar;
+    if (page) {
+        // same chrome as the other two first-level pages: an action row, then the large title
+        head = element('div', 'imsg-page-head');
+        const actions = element('div', 'imsg-page-actions');
+        actions.append(tools);
+        head.append(actions, element('h1', 'imsg-page-title', t('Contacts 联系人')));
+    } else {
+        bar.append(done, element('h1', 'imsg-cn-title', t(pick ? 'New Message' : 'Contacts')), pick ? element('span') : tools);
+    }
 
     const searchBox = element('label', 'imsg-search imsg-cn-search');
     searchBox.append(glyph('search'));
@@ -1656,7 +1665,7 @@ function buildWindow(instance) {
     const index = element('nav', 'imsg-cn-index');
     index.setAttribute('aria-label', t('Index'));
     listWrap.append(scroll, index);
-    side.append(bar, searchBox, tags, listWrap);
+    side.append(head, searchBox, tags, listWrap);
 
     const detail = element('section', 'imsg-cn-detail');
     win.append(side, detail);

@@ -194,8 +194,9 @@ function buildMe() {
     root.id = ME_ID;
 
     const bar = element('header', 'imsg-me-bar');
-    bar.append(element('h1', '', t('Me 我的')));
-    bar.append(button('imsg-me-edit', t('Edit 编辑'), () => openMyCard({ sheet: true, onClose: showMe })));
+    const actions = element('div', 'imsg-me-actions');
+    actions.append(button('imsg-me-edit', t('Edit 编辑'), () => openMyCard({ sheet: true, onClose: showMe })));
+    bar.append(actions, element('h1', '', t('Me 我的')));
 
     const scroll = element('div', 'imsg-me-scroll');
     scroll.append(profile());
