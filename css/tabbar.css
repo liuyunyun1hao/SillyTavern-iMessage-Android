@@ -111,7 +111,7 @@ body.imessage .imsg-me-bar h1 {
     margin: 0;
     padding: 0 0 6px;
     font: 700 34px/41px var(--imsg-font-display);
-    letter-spacing: -0.01em;
+    letter-spacing: 0.01em;
 }
 
 body.imessage .imsg-me-edit {
