@@ -406,7 +406,7 @@ body.imessage #nonQRFormItems {
 /* ── 悬浮底栏不遮挡内容：列表和「我的」的最后一行留出空间 ── */
 
 body.imessage .imsg-list-body {
-    padding-bottom: calc(var(--imsg-tabbar-h, 76px) + 10px);
+    padding-bottom: calc(var(--imsg-tabbar-h, 76px) + 12px);
 }
 
 /* ── 美化面板：手机上保持底部抽屉的形态，换成玻璃与 28px 圆角 ── */
@@ -798,26 +798,9 @@ body.imessage .imsg-cn-members .imsg-cn-member {
         display: none;
     }
 
-    /* 列表最后一行要能滚到悬浮底栏之上 */
+    /* 列表最后一行要能滚到悬浮底栏之上：和「我的」页用同一个数值 */
     body.imessage .imsg-cn.imsg-cn-page .imsg-cn-scroll {
-        padding-bottom: calc(68px + env(safe-area-inset-bottom, 0px) + 10px);
-    }
-
-    body.imessage .imsg-cn.imsg-cn-page .imsg-cn-detail {
-        padding-bottom: calc(68px + env(safe-area-inset-bottom, 0px));
-    }
-
-    /* 悬浮底栏周围不再露出被截断的行 */
-    body.imessage .imsg-cn.imsg-cn-page .imsg-cn-window::after {
-        content: '';
-        position: absolute;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        height: calc(env(safe-area-inset-bottom, 0px) + 92px);
-        background: linear-gradient(180deg, transparent, var(--g26-page-solid) 58%);
-        pointer-events: none;
-        z-index: 4;
+        padding-bottom: calc(var(--imsg-tabbar-h, 76px) + 12px);
     }
 }
 
