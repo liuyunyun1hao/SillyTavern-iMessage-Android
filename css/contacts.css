@@ -56,11 +56,6 @@ body.imsg-cn-open {
     overscroll-behavior: none;
 }
 
-/* the tab bar is moved in here while the window is open: one bar, in the window's own layer */
-body.imessage .imsg-cn-nav {
-    display: none;
-}
-
 /* ── The list ── */
 
 body.imessage .imsg-cn-side {
@@ -954,28 +949,6 @@ body.imessage .imsg-cn.imsg-cn-picking .imsg-cn-detail {
         transform: none;
         visibility: visible;
         transition: transform 0.3s var(--imsg-ease);
-    }
-
-    /* the docked bar: one bar, inside the window, above the card, clear of the home indicator */
-    body.imessage .imsg-cn-nav:not([hidden]) {
-        position: relative;
-        z-index: 3;
-        display: block;
-        flex: none;
-        padding: 6px 12px calc(6px + env(safe-area-inset-bottom));
-        background: transparent;
-    }
-
-    body.imessage .imsg-tabbar.imsg-tabbar-docked {
-        position: relative;
-        left: auto;
-        right: auto;
-        bottom: auto;
-        height: 58px;
-        padding-bottom: 0;
-        border: 0.5px solid var(--imsg-line);
-        border-radius: 29px;
-        box-sizing: border-box;
     }
 
     body.imessage .imsg-cn-section-title {

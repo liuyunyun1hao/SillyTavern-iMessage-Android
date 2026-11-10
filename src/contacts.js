@@ -5,6 +5,8 @@
 import * as personas from '../../../../personas.js';
 import { default_user_avatar, setUserName } from '../../../../../script.js';
 import { events, onStop } from './power.js';
+import { acquire as acquireOverlay, release as releaseOverlay } from './overlay.js';
+import { enter as enterEntry, exit as exitEntry } from './history.js';
 import { monogramize, buildMonogram } from './monograms.js';
 import { buildGroupAvatar, clickOption, toggleMenu } from './shell.js';
 import { button, context, element, escapeHtml, glyph, isPhone, overlayOpen, setPicture, t } from './dom.js';
@@ -42,19 +44,16 @@ const GENERATION_MODES = [
     [2, 'All cards combined, muted ones too'],
 ];
 
-/** What's on screen: the selection, the mode and the search */
-let view = { key: null, mode: 'card', pick: false, direct: false, sheet: false, needle: '', tag: null, sort: 'name', onClose: null };
-/** 上次选的排序，下次打开仍按它排（A–Z / 最近） */
+/** Every contacts window (the page, the modal, the picker, a sheet), each with its own root and view. */
+const windows = new Map();
+/** The window being used right now: its view/root are what the sync code paths read. */
+let active = null;
+let view = { key: null, mode: 'card', pick: false, sheet: false, page: false, needle: '', tag: null, sort: 'name', onClose: null };
+let activeRoot = null;
+/** The sort the user picked last; shared on purpose, it's a preference, not per-window state. */
 let lastSort = 'name';
-/** 搜索框上一次渲染用的文字，用来知道要不要把列表滚回顶部 */
-let lastNeedle = '';
-/** 搜索输入的去抖计时器：联系人很多时，每敲一个字都重建整个列表会卡 */
-let searchTimer = 0;
-/** 一次渲染里复用同一份联系人列表，角色多时不用算三遍 */
+/** One render's cache of the contact list. */
 let itemsCache = null;
-
-/** Sheet mode (opened from Me) keeps a history entry so Android's back key closes it. */
-let sheetPushed = false;
 
 /*
  * The window is a real modal: the page underneath keeps its state (chat scroll, Me scroll) instead
@@ -64,7 +63,6 @@ let sheetPushed = false;
 const OPEN_CLASS = 'imsg-cn-open';
 let scrollLocked = false;
 let pageScrollY = 0;
-let barHome = null;
 
 function lockPage() {
     if (scrollLocked) {
@@ -87,28 +85,6 @@ function unlockPage() {
     if (pageScrollY) {
         window.scrollTo(0, pageScrollY);
     }
-}
-
-/** Moves the one tab bar inside the window, into the window's own stacking context. */
-function dockBar(root) {
-    const bar = document.getElementById('imsg-tabbar');
-    const dock = root.querySelector('.imsg-cn-nav');
-    if (!bar || !dock) {
-        return;
-    }
-    barHome = bar.parentElement;
-    dock.append(bar);
-    bar.classList.add('imsg-tabbar-docked');
-    dock.hidden = false;
-}
-
-function undockBar() {
-    const bar = document.getElementById('imsg-tabbar');
-    if (bar && barHome) {
-        bar.classList.remove('imsg-tabbar-docked');
-        barHome.append(bar);
-    }
-    barHome = null;
 }
 
 /** Plain text, without markup or macros, cut to a length. */
@@ -222,7 +198,13 @@ function wentToChat() {
 
 async function openConversation(item) {
     const ctx = context();
-    close('pick');
+    const instance = active;
+    if (instance?.page) {
+        hideContactsPage();
+        wentToChat();
+    } else {
+        close('pick');
+    }
     if (item.group) {
         if (String(ctx.groupId) === String(item.group.id)) {
             return;
@@ -245,6 +227,7 @@ async function openConversation(item) {
 
 async function afterOpening(item, run) {
     const ctx = context();
+    const instance = active;
     const current = item.group ? String(ctx.groupId) === String(item.group.id) : ctx.characters[ctx.characterId]?.avatar === item.character.avatar;
     if (!current) {
         const changed = new Promise((resolve) => {
@@ -253,6 +236,9 @@ async function afterOpening(item, run) {
         });
         await openConversation(item);
         await changed;
+    } else if (instance?.page) {
+        hideContactsPage();
+        wentToChat();
     } else {
         close();
     }
@@ -302,7 +288,7 @@ async function uploadPicture(avatar, file) {
 }
 
 /** After a change: the app reloads its lists, then this one redraws. */
-async function reloadAll() {
+async function reloadAll(instance = active) {
     try {
         await context().getCharacters();
     } catch (error) {
@@ -316,10 +302,11 @@ async function reloadAll() {
             return;
         }
     }
-    render();
+    renderInstance(instance);
 }
 
 async function toggleFavorite(item) {
+    const instance = active;
     const fav = !item.fav;
     try {
         if (item.group) {
@@ -328,7 +315,7 @@ async function toggleFavorite(item) {
             await mergeCharacter(item.character.avatar, { fav, data: { extensions: { fav } } });
             await context().getOneCharacter(item.character.avatar);
         }
-        await reloadAll();
+        await reloadAll(instance);
     } catch (error) {
         toastr.error(String(error.message ?? error), t('Couldn’t change Favorites'));
     }
@@ -355,16 +342,19 @@ async function exportCharacter(item, format) {
 }
 
 async function duplicate(item) {
+    const instance = active;
     const result = await context().executeSlashCommandsWithOptions(`/char-duplicate char=${slashValue(item.character.avatar)}`, { handleParserErrors: true, handleExecutionErrors: true });
-    await reloadAll();
+    await reloadAll(instance);
     const avatar = String(result?.pipe ?? '');
-    if (avatar) {
+    if (avatar && instance?.root?.isConnected) {
+        activate(instance);
         select(`c:${avatar}`);
     }
 }
 
 async function deleteContact(item) {
     const ctx = context();
+    const instance = active;
     if (item.group) {
         // the app's own delete tidies away a group's open conversation too
         await afterOpening(item, () => document.getElementById('rm_group_delete')?.click());
@@ -380,9 +370,11 @@ async function deleteContact(item) {
         return;
     }
     await ctx.executeSlashCommandsWithOptions(`/char-delete char=${slashValue(item.character.avatar)} silent=true deleteChats=${answer === ALL}`, { handleParserErrors: true, handleExecutionErrors: true });
-    view.key = null;
-    view.mode = 'card';
-    await reloadAll();
+    if (instance?.root?.isConnected) {
+        instance.view.key = null;
+        instance.view.mode = 'card';
+    }
+    await reloadAll(instance);
 }
 
 async function saveGroup(group) {
@@ -398,13 +390,14 @@ async function saveGroup(group) {
 
 async function importFromUrl() {
     const ctx = context();
+    const instance = active;
     const url = await ctx.callGenericPopup(t('Paste a link to a character card, or a Chub, JanitorAI, Pygmalion or RisuRealm page.'), ctx.POPUP_TYPE.INPUT, '', { okButton: t('Import'), cancelButton: t('Cancel') });
     if (!url || typeof url !== 'string') {
         return;
     }
     try {
         await ctx.importFromExternalUrl(url.trim());
-        await reloadAll();
+        await reloadAll(instance);
     } catch (error) {
         toastr.error(String(error.message ?? error), t('Couldn’t import'));
     }
@@ -486,8 +479,11 @@ function renderList(list, index) {
     const needle = view.needle.trim().toLowerCase();
     const shown = items.filter((item) => (!needle || item.search.includes(needle)) && (!view.tag || item.tags.some((tag) => tag.id === view.tag)));
     // a new search starts at the top; selecting a contact keeps the list where it was
-    const scroll = view.needle === lastNeedle ? list.scrollTop : 0;
-    lastNeedle = view.needle;
+    const seen = active?.lastNeedle ?? '';
+    const scroll = view.needle === seen ? list.scrollTop : 0;
+    if (active) {
+        active.lastNeedle = view.needle;
+    }
     const parts = [];
     if (!needle && !view.tag && !view.pick) {
         parts.push(myCard());
@@ -788,6 +784,7 @@ function renderCharacterForm(pane, item) {
             return;
         }
         save.disabled = true;
+        const instance = active;
         const values = Object.fromEntries([...inputs].map(([key, input]) => [key, input.value]));
         const alternate = [...greetingList.querySelectorAll('textarea')].map((area) => area.value).filter((text) => text.trim());
         const tagList = tags.input.value.split(',').map((tag) => tag.trim()).filter(Boolean);
@@ -795,9 +792,11 @@ function renderCharacterForm(pane, item) {
         try {
             const key = character ? await updateCharacter(character, newName, values, alternate, tagList, talkativeness, photo)
                 : await createCharacter(newName, values, alternate, tagList, talkativeness, photo);
-            view.key = key;
-            view.mode = 'card';
-            await reloadAll();
+            if (instance?.root?.isConnected) {
+                instance.view.key = key;
+                instance.view.mode = 'card';
+            }
+            await reloadAll(instance);
         } catch (error) {
             toastr.error(String(error.message ?? error), t('Couldn’t save'));
         } finally {
@@ -1005,6 +1004,7 @@ function renderGroupForm(pane, item) {
         }
         const groupName = name.input.value.trim() || `${t('Group')}: ${members.map((avatar) => ctx.characters.find((x) => x.avatar === avatar)?.name).filter(Boolean).join(', ')}`;
         save.disabled = true;
+        const instance = active;
         try {
             if (group) {
                 await saveGroup({
@@ -1016,7 +1016,9 @@ function renderGroupForm(pane, item) {
                     generation_mode: Number(mode.value),
                     allow_self_responses: self.checked,
                 });
-                view.key = `g:${group.id}`;
+                if (instance?.root?.isConnected) {
+                    instance.view.key = `g:${group.id}`;
+                }
             } else {
                 const chat = ctx.humanizedDateTime();
                 const response = await fetch('/api/groups/create', {
@@ -1041,10 +1043,14 @@ function renderGroupForm(pane, item) {
                     throw new Error(`${response.status}`);
                 }
                 const created = await response.json();
-                view.key = `g:${created.id}`;
+                if (instance?.root?.isConnected) {
+                instance.view.key = `g:${created.id}`;
             }
-            view.mode = 'card';
-            await reloadAll();
+            }
+            if (instance?.root?.isConnected) {
+                instance.view.mode = 'card';
+            }
+            await reloadAll(instance);
         } catch (error) {
             toastr.error(String(error.message ?? error), t('Couldn’t save the group'));
         } finally {
@@ -1062,9 +1068,13 @@ function paneBar(title, primary, secondary) {
     const bar = element('header', 'imsg-cn-pane-bar');
     // 只留一个箭头，不再带「联系人」三个字；从「我的」进来时返回「我的」，否则退回列表
     const back = button('imsg-cn-back', 'Back 返回', () => {
-        // a sheet (My Card over Me) closes; the full window goes back to the list
+        // a sheet (My Card over Me) closes; the page keeps its list and closes the detail layer
         if (view.sheet) {
             dismiss();
+            return;
+        }
+        if (active?.page) {
+            closeDetail(active);
             return;
         }
         view.key = null;
@@ -1127,20 +1137,23 @@ function allPersonas() {
 }
 
 async function usePersona(avatar) {
+    const instance = active;
     await personas.setUserAvatar(avatar, { toastPersonaNameChange: false });
-    render();
+    renderInstance(instance);
 }
 
 async function toggleChatLock() {
+    const instance = active;
     await personas.setPersonaLockState(!personas.isPersonaLocked('chat'), 'chat');
-    render();
+    renderInstance(instance);
 }
 
 function toggleDefault(avatar) {
+    const instance = active;
     const settings = powerUser();
     settings.default_persona = settings.default_persona === avatar ? null : avatar;
     context().saveSettingsDebounced();
-    render();
+    renderInstance(instance);
 }
 
 async function uploadPersonaPicture(avatar, file) {
@@ -1163,6 +1176,7 @@ async function uploadPersonaPicture(avatar, file) {
 
 async function deletePersona(avatar) {
     const ctx = context();
+    const instance = active;
     const ok = await ctx.callGenericPopup(
         `<h3>${t('Delete')} ${escapeHtml(personaName(avatar))}?</h3><p>${t('Their picture and description go too. This can’t be undone.')}</p>`,
         ctx.POPUP_TYPE.CONFIRM, '', { okButton: t('Delete'), cancelButton: t('Cancel') },
@@ -1171,9 +1185,11 @@ async function deletePersona(avatar) {
         return;
     }
     await ctx.executeSlashCommandsWithOptions(`/persona-delete persona=${slashValue(avatar)} silent=true`, { handleParserErrors: true, handleExecutionErrors: true });
-    view.key = `p:${personas.user_avatar}`;
-    view.mode = 'card';
-    render();
+    if (instance?.root?.isConnected) {
+        instance.view.key = `p:${personas.user_avatar}`;
+        instance.view.mode = 'card';
+    }
+    renderInstance(instance);
 }
 
 function renderPersonaCard(pane, avatar) {
@@ -1302,6 +1318,7 @@ function renderPersonaForm(pane, avatar) {
             return;
         }
         save.disabled = true;
+        const instance = active;
         const values = {
             description: description.input.value,
             title: title.input.value.trim(),
@@ -1311,9 +1328,11 @@ function renderPersonaForm(pane, avatar) {
         };
         try {
             const key = avatar ? await updatePersona(avatar, newName, values, photo) : await createPersona(newName, values, photo);
-            view.key = `p:${key}`;
-            view.mode = 'card';
-            render();
+            if (instance?.root?.isConnected) {
+                instance.view.key = `p:${key}`;
+                instance.view.mode = 'card';
+            }
+            renderInstance(instance);
         } catch (error) {
             toastr.error(String(error.message ?? error), t('Couldn’t save'));
         } finally {
@@ -1368,12 +1387,12 @@ async function createPersona(newName, values, photo) {
 function select(key) {
     view.key = key;
     view.mode = 'card';
+    rememberDetail(active);
     render();
 }
 
-function render() {
-    const root = document.getElementById(ROOT_ID);
-    if (!root) {
+function render(root = activeRoot) {
+    if (!root || !root.isConnected) {
         return;
     }
     // the data may have changed since the last pass, so this render builds a fresh list
@@ -1409,95 +1428,172 @@ function render() {
     }
 }
 
-/** Takes the window apart without telling anyone: used before opening another one. */
-function teardown() {
-    undockBar();
-    document.getElementById(ROOT_ID)?.remove();
-    document.removeEventListener('keydown', onKey, true);
-    window.removeEventListener('popstate', onPop);
-    unlockPage();
-    if (sheetPushed) {
-        sheetPushed = false;
-        // drop the entry we added so the next back press still leaves the app
-        if (history.state?.imsgSheet) {
-            history.back();
-        }
+/* ── Windows: one instance each for the page, the modal, the picker and the sheet ── */
+
+const PAGE_ID = 'imsg-contacts-page';
+
+function activate(instance) {
+    active = instance;
+    view = instance.view;
+    activeRoot = instance.root;
+}
+
+function renderInstance(instance) {
+    if (!instance?.root?.isConnected) {
+        return;
+    }
+    activate(instance);
+    render(instance.root);
+}
+
+function registerWindow(instance) {
+    windows.set(instance.id, instance);
+    // any interaction with a window makes it the current one, so sync code reads its view
+    const grab = () => activate(instance);
+    instance.root.addEventListener('pointerdown', grab, true);
+    instance.root.addEventListener('focusin', grab, true);
+    return instance;
+}
+
+/** Removes one window for good (a modal being closed, or the page on theme stop). */
+function destroyWindow(instance = active) {
+    if (!instance) {
+        return;
+    }
+    clearTimeout(instance.searchTimer);
+    if (instance.overlay) {
+        releaseOverlay(instance.overlay);
+        instance.overlay = null;
+    }
+    instance.detailEntry = null;
+    windows.delete(instance.id);
+    if (instance.root?.isConnected) {
+        instance.root.remove();
+    }
+    if (active === instance) {
+        active = null;
+        activeRoot = null;
     }
 }
 
-/**
- * Closes the window and hands control back to whoever opened it (the tab bar, Me, the chat).
- * The reason lets the opener tell "Done" from "a contact was picked to chat with".
- */
+/** Closes a modal and hands control back to whoever opened it (never the page). */
 function close(reason = 'done') {
-    const leave = view.onClose;
-    teardown();
-    view.onClose = null;
+    const instance = active;
+    if (!instance || instance.page) {
+        return;
+    }
+    const leave = instance.view.onClose;
+    if (instance.entry) {
+        const entry = instance.entry;
+        instance.entry = null;
+        exitEntry(entry);
+    }
+    destroyWindow(instance);
+    unlockPage();
     leave?.(reason);
 }
 
-/** Closes the window and hands control back to whoever opened it (Me, the chat). */
 function dismiss() {
     close('dismiss');
 }
 
-function onPop() {
-    if (!document.getElementById(ROOT_ID) || !view.sheet) {
+/** Closes the card/edit layer inside the contacts page without touching the page itself. */
+function closeDetail(instance = active) {
+    if (!instance) {
         return;
     }
-    sheetPushed = false;
-    // the browser already popped the entry, so no history.back() from close()
-    close('back');
+    instance.view.key = null;
+    instance.view.mode = 'card';
+    if (instance.detailEntry) {
+        const entry = instance.detailEntry;
+        instance.detailEntry = null;
+        exitEntry(entry);
+    }
+    renderInstance(instance);
+}
+
+/** The page's detail layer gets its own back-stack entry; a modal instance never does. */
+function rememberDetail(instance) {
+    if (!instance?.page || instance.detailEntry) {
+        return;
+    }
+    instance.detailEntry = enterEntry('contact-detail', () => {
+        instance.detailEntry = null;
+        instance.view.key = null;
+        instance.view.mode = 'card';
+        renderInstance(instance);
+    });
 }
 
 function onKey(event) {
     if (event.key !== 'Escape' || overlayOpen()) {
         return;
     }
+    if (!document.body.classList.contains('imessage')) {
+        return;
+    }
+    const instance = active;
+    const root = instance?.root;
+    if (!instance || !root?.isConnected) {
+        return;
+    }
     event.stopPropagation();
-    const root = document.getElementById(ROOT_ID);
-    if (view.mode === 'edit' || view.key?.startsWith('new:')) {
-        root?.querySelector('.imsg-cn-pane-bar .imsg-cn-cancel')?.click();
-    } else if (view.sheet) {
+    if (instance.view.mode === 'edit' || instance.view.key?.startsWith('new:')) {
+        root.querySelector('.imsg-cn-pane-bar .imsg-cn-cancel')?.click();
+    } else if (instance.view.sheet) {
         dismiss();
-    } else if (root?.classList.contains('imsg-cn-has-detail') && isPhone()) {
-        view.key = null;
-        render();
+    } else if (root.classList.contains('imsg-cn-has-detail') && isPhone()) {
+        closeDetail(instance);
+    } else if (instance.page) {
+        // let the tab bar take the page away
+        window.dispatchEvent(new CustomEvent('imsg:contacts-escape'));
     } else {
         close('esc');
     }
 }
 
-/**
- * Opens Contacts.
- * @param {{ pick?: boolean, key?: string, edit?: boolean }} [options] pick: New Message (a tap
- *   opens the conversation); key: the contact to show; edit: open their Edit form.
- */
-export function openContacts({ pick = false, direct = false, key = null, edit = false, sheet = false, onClose = null } = {}) {
-    teardown();
-    view = { key, mode: edit ? 'edit' : 'card', pick, direct, sheet, needle: '', tag: null, sort: lastSort, onClose };
-    lastNeedle = '';
+function createInstance({ id, page = false, pick = false, sheet = false, key = null, edit = false, onClose = null }) {
+    return {
+        id,
+        page,
+        pick,
+        sheet,
+        onClose,
+        root: null,
+        view: { key, mode: edit ? 'edit' : 'card', pick, sheet, page, needle: '', tag: null, sort: lastSort, onClose },
+        lastNeedle: '',
+        searchTimer: 0,
+        overlay: null,
+        entry: null,
+        detailEntry: null,
+    };
+}
 
+/** Builds one window's DOM. The page and the modal share it; only the shell differs. */
+function buildWindow(instance) {
+    const { id, page, pick, sheet } = instance;
+    const v = instance.view;
     const root = element('div');
-    root.id = ROOT_ID;
+    root.id = id;
     root.className = 'imsg-cn';
-    root.classList.toggle('imsg-cn-sheet', view.sheet);
-    // full-screen mode: an opaque, viewport-sized surface of its own instead of a translucent
-    // page floating over whatever was open — nothing underneath may show through
-    const modal = !view.pick && !view.sheet;
-    root.classList.toggle('imsg-cn-modal', modal);
+    root.classList.toggle('imsg-cn-sheet', sheet);
+    root.classList.toggle('imsg-cn-page', page);
+    const modal = !page && !pick && !sheet;
+    // the page reuses the modal's inner layout (bar, search, grouped list); only its shell differs
+    root.classList.toggle('imsg-cn-modal', modal || page);
+    instance.root = root;
 
-    // the dimmed, blurred copy of whatever page is underneath; the window sits on top of it.
-    // a real modal covers the viewport itself, so it needs no scrim
     const backdrop = element('div', 'imsg-cn-backdrop');
-    backdrop.addEventListener('click', () => (view.sheet ? dismiss() : close('backdrop')));
-    if (modal) {
+    backdrop.addEventListener('click', () => (sheet ? dismiss() : close('backdrop')));
+    if (modal || page) {
         backdrop.hidden = true;
     }
 
     const win = element('div', 'imsg-cn-window');
-    win.setAttribute('role', 'dialog');
-    win.setAttribute('aria-modal', 'true');
+    if (!page) {
+        win.setAttribute('role', 'dialog');
+        win.setAttribute('aria-modal', 'true');
+    }
     win.setAttribute('aria-label', t(pick ? 'New Message' : 'Contacts'));
 
     const side = element('div', 'imsg-cn-side');
@@ -1508,26 +1604,26 @@ export function openContacts({ pick = false, direct = false, key = null, edit = 
     add.append(glyph('plus'));
     add.addEventListener('click', () => {
         toggleMenu(add, [
-            { label: 'New Contact', run: () => { view.key = 'new:c'; render(); } },
-            { label: 'New Group', run: () => { view.key = 'new:g'; render(); } },
+            { label: 'New Contact', run: () => { v.key = 'new:c'; rememberDetail(instance); renderInstance(instance); } },
+            { label: 'New Group', run: () => { v.key = 'new:g'; rememberDetail(instance); renderInstance(instance); } },
             {},
             { label: 'Import from File…', run: importFromFile },
             { label: 'Import from Link…', run: importFromUrl },
         ]);
     });
-    const done = button('imsg-cn-done', pick ? 'Cancel' : 'Done', () => close(pick ? 'cancel' : 'done'));
-    const sort = button('imsg-cn-sort', view.sort === 'recent' ? '最近' : 'A–Z', () => {
-        view.sort = view.sort === 'recent' ? 'name' : 'recent';
-        lastSort = view.sort;
-        sort.textContent = view.sort === 'recent' ? '最近' : 'A–Z';
-        sort.title = t(view.sort === 'recent' ? 'Sort by recent 按最近' : 'Sort by name 按字母');
+    const done = page ? null : button('imsg-cn-done', pick ? 'Cancel' : 'Done', () => close(pick ? 'cancel' : 'done'));
+    const sort = button('imsg-cn-sort', v.sort === 'recent' ? '最近' : 'A–Z', () => {
+        v.sort = v.sort === 'recent' ? 'name' : 'recent';
+        lastSort = v.sort;
+        sort.textContent = v.sort === 'recent' ? '最近' : 'A–Z';
+        sort.title = t(v.sort === 'recent' ? 'Sort by recent 按最近' : 'Sort by name 按字母');
         root.querySelector('.imsg-cn-scroll').scrollTop = 0;
-        render();
+        renderInstance(instance);
     });
-    sort.title = t(view.sort === 'recent' ? 'Sort by recent 按最近' : 'Sort by name 按字母');
+    sort.title = t(v.sort === 'recent' ? 'Sort by recent 按最近' : 'Sort by name 按字母');
     const tools = element('span', 'imsg-cn-tools');
     tools.append(sort, add);
-    bar.append(done, element('h1', 'imsg-cn-title', t(pick ? 'New Message' : 'Contacts')), pick ? element('span') : tools);
+    bar.append(page ? element('span') : done, element('h1', 'imsg-cn-title', t(pick ? 'New Message' : 'Contacts')), pick ? element('span') : tools);
 
     const searchBox = element('label', 'imsg-search imsg-cn-search');
     searchBox.append(glyph('search'));
@@ -1537,18 +1633,18 @@ export function openContacts({ pick = false, direct = false, key = null, edit = 
     search.setAttribute('aria-label', search.placeholder);
     search.addEventListener('input', () => {
         // 联系人很多时，每敲一个字都重建整个列表会卡：停一下再画
-        clearTimeout(searchTimer);
-        searchTimer = setTimeout(() => {
-            view.needle = search.value;
-            render();
+        clearTimeout(instance.searchTimer);
+        instance.searchTimer = setTimeout(() => {
+            v.needle = search.value;
+            renderInstance(instance);
         }, 110);
     });
     search.addEventListener('keydown', (event) => {
         // Enter in New Message writes to the first match
-        if (event.key === 'Enter' && view.pick) {
-            clearTimeout(searchTimer);
-            view.needle = search.value;
-            render();
+        if (event.key === 'Enter' && v.pick) {
+            clearTimeout(instance.searchTimer);
+            v.needle = search.value;
+            renderInstance(instance);
             root.querySelector('.imsg-cn-scroll .imsg-cn-row:not(.imsg-cn-me)')?.click();
         }
     });
@@ -1563,28 +1659,93 @@ export function openContacts({ pick = false, direct = false, key = null, edit = 
     side.append(bar, searchBox, tags, listWrap);
 
     const detail = element('section', 'imsg-cn-detail');
-    // the tab bar lives here (moved in on open) instead of floating above the window
-    const nav = element('div', 'imsg-cn-nav');
-    nav.hidden = true;
-    win.append(side, detail, nav);
-    root.append(backdrop, win);
+    win.append(side, detail);
+    root.append(win);
+    if (!page) {
+        root.prepend(backdrop);
+    }
+    registerWindow(instance);
+
+    if (page) {
+        document.body.append(root);
+        showContactsPage();
+        return instance;
+    }
+
     document.body.append(root);
-    document.addEventListener('keydown', onKey, true);
-    render();
-    if (view.sheet) {
-        history.pushState({ imsgSheet: true }, '');
-        sheetPushed = true;
-        window.addEventListener('popstate', onPop);
-    } else {
-        lockPage();
-        // a picker ("New Message") keeps the bar out of the way, as before
-        if (!view.pick && isPhone()) {
-            dockBar(root);
+    lockPage();
+    instance.overlay = acquireOverlay(sheet ? 'contacts:sheet' : pick ? 'contacts:picker' : 'contacts:modal');
+    if (sheet) {
+        instance.entry = enterEntry('persona-sheet', () => {
+            instance.entry = null;
+            close('back');
+        });
+    }
+    renderInstance(instance);
+    // 手机上打开通讯录不自动弹键盘，点搜索框才聚焦；桌面保留直接输入
+    if (!instance.view.mode.startsWith('edit') && !isPhone()) {
+        search.focus({ preventScroll: true });
+    }
+    return instance;
+}
+
+/** Opens a contacts modal (the secondary surface used from the chat and the app menu). */
+export function openContacts({ pick = false, key = null, edit = false, sheet = false, onClose = null } = {}) {
+    // one modal at a time; the page is a different window and is never touched here
+    for (const instance of [...windows.values()]) {
+        if (!instance.page) {
+            destroyWindow(instance);
         }
     }
-    // 手机上打开通讯录不自动弹键盘，点搜索框才聚焦；桌面保留直接输入
-    if (!edit && !isPhone()) {
-        search.focus({ preventScroll: true });
+    const instance = createInstance({ id: ROOT_ID, pick, sheet, key, edit, onClose });
+    return buildWindow(instance);
+}
+
+function ensureContactsPage() {
+    let instance = windows.get(PAGE_ID);
+    if (!instance || !instance.root?.isConnected) {
+        instance = createInstance({ id: PAGE_ID, page: true });
+        buildWindow(instance);
+    }
+    return instance;
+}
+
+/** Shows the Contacts first-level page, building it once on first use. */
+export function showContactsPage() {
+    const instance = ensureContactsPage();
+    instance.root.classList.remove('imsg-hidden');
+    instance.root.removeAttribute('inert');
+    instance.root.setAttribute('aria-hidden', 'false');
+    renderInstance(instance);
+    return instance;
+}
+
+export function hideContactsPage() {
+    const instance = windows.get(PAGE_ID);
+    if (!instance) {
+        return;
+    }
+    instance.root.classList.add('imsg-hidden');
+    instance.root.setAttribute('inert', '');
+    instance.root.setAttribute('aria-hidden', 'true');
+}
+
+/** Clears the page's card/edit layer without touching its search, sort, scroll or history. */
+export function resetContactsDetail() {
+    const instance = windows.get(PAGE_ID);
+    if (!instance) {
+        return;
+    }
+    instance.detailEntry = null;
+    instance.view.key = null;
+    instance.view.mode = 'card';
+    instance.root?.classList.remove('imsg-cn-has-detail');
+}
+
+export function destroyContactsPage() {
+    const instance = windows.get(PAGE_ID);
+    if (instance) {
+        destroyWindow(instance);
     }
 }
 
@@ -1594,11 +1755,13 @@ export function openMyCard({ onClose = null, sheet = false } = {}) {
     openContacts({ key: `p:${personas.user_avatar}`, sheet, onClose });
 }
 
-/** Closes the window from outside (a tab tap); the reason tells the opener not to put the tab back. */
+/** Closes the modal from outside (never the page). */
 export function closeContacts() {
-    if (!document.getElementById(ROOT_ID)) {
+    const modal = [...windows.values()].find((instance) => !instance.page);
+    if (!modal) {
         return false;
     }
+    activate(modal);
     close('tab');
     return true;
 }
@@ -1627,15 +1790,35 @@ export function initContacts() {
     for (const type of [eventTypes.CHARACTER_PAGE_LOADED, eventTypes.CHARACTER_DELETED, eventTypes.GROUP_UPDATED, eventTypes.CHARACTER_EDITED, eventTypes.PERSONA_CHANGED, eventTypes.PERSONA_DELETED]) {
         if (type) {
             eventSource.on(type, () => {
-                const root = document.getElementById(ROOT_ID);
+                const modal = [...windows.values()].find((instance) => !instance.page && instance.root?.isConnected);
+                const page = windows.get(PAGE_ID);
                 // a form being filled in isn't redrawn under the person typing
-                if (root && view.mode !== 'edit' && !view.key?.startsWith('new:')) {
-                    render();
+                for (const instance of [page, modal]) {
+                    if (!instance?.root?.isConnected) {
+                        continue;
+                    }
+                    if (instance.view.mode === 'edit' || instance.view.key?.startsWith('new:')) {
+                        continue;
+                    }
+                    renderInstance(instance);
+                }
+                if (modal) {
+                    activate(modal);
+                } else if (page) {
+                    activate(page);
                 }
             });
         }
     }
 }
 
-// turning the theme off closes the window, putting back what it borrowed
-onStop(close);
+// one key handler for every window; it always acts on the current (topmost) one
+document.addEventListener('keydown', onKey, true);
+
+// turning the theme off closes every window, putting back what it borrowed
+onStop(() => {
+    for (const instance of [...windows.values()]) {
+        destroyWindow(instance);
+    }
+    unlockPage();
+});
