@@ -965,3 +965,37 @@ body.imessage .imsg-cn-members .imsg-cn-member {
         min-height: 64px;
     }
 }
+
+/* 防横向拖动：行是 width:100%，再加左右外边距就会把滚动区撑宽 32px */
+body.imessage .imsg-cn-scroll {
+    overflow-x: hidden;
+    touch-action: pan-y;
+    overscroll-behavior-x: contain;
+}
+
+/* 直接挂在滚动区下的整张卡片（「我的名片」）：宽度要减去左右外边距，否则撑出横向滚动 */
+body.imessage .imsg-cn.imsg-cn-page .imsg-cn-scroll > .imsg-cn-row {
+    width: calc(100% - 32px);
+}
+
+body.imessage .imsg-cn.imsg-cn-modal:not(.imsg-cn-page) .imsg-cn-scroll > .imsg-cn-row {
+    width: calc(100% - 24px);
+}
+
+/* 字母索引改为右侧浮层，不再占一列宽度：联系人卡片与搜索框同宽 */
+@media screen and (max-width: 1000px) {
+    body.imessage .imsg-cn.imsg-cn-page .imsg-cn-listwrap {
+        position: relative;
+    }
+
+    body.imessage .imsg-cn.imsg-cn-page .imsg-cn-index {
+        position: absolute;
+        top: 6px;
+        right: 2px;
+        bottom: 96px;
+        width: 18px;
+        margin: 0;
+        padding: 0;
+        z-index: 3;
+    }
+}
