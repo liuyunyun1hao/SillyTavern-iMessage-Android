@@ -2,10 +2,12 @@ import { toggleMenu, reopenMenu } from './shell.js';
 import { host, releaseAll } from './host.js';
 import { onStop } from './power.js';
 import { button, element, glyph, isPhone, overlayOpen, t } from './dom.js';
+import { acquire as acquireOverlay, release as releaseOverlay } from './overlay.js';
 
 const TILE_COLORS = ['#0a84ff', '#30b0c7', '#34c759', '#ff9f0a', '#ff375f', '#bf5af2', '#5e5ce6', '#8e8e93', '#64d2ff', '#ac8e68'];
 
 let open = null;
+let overlayToken = null;
 
 export function tile(section, big = false) {
     const node = element('span', `imsg-ext-tile${big ? ' imsg-ext-tile-big' : ''}`);
@@ -125,6 +127,10 @@ export function redrawPanes() {
 }
 
 function close() {
+    if (overlayToken) {
+        releaseOverlay(overlayToken);
+        overlayToken = null;
+    }
     for (const node of document.querySelectorAll('.imsg-set-show')) node.classList.remove('imsg-set-show');
     releaseAll();
     if (open) {
@@ -206,6 +212,7 @@ export function openPanes(def, start = null) {
     });
     document.body.append(root);
     document.addEventListener('keydown', onKey, true);
+    overlayToken = acquireOverlay(def.id || 'panes');
     render();
 }
 

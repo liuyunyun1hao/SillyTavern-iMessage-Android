@@ -6,6 +6,7 @@ import { background_settings, getBackgroundPath } from '../../../../backgrounds.
 import { events, onStop } from './power.js';
 import { toggleMenu } from './shell.js';
 import { PHONE_QUERY, button, context, element, glyph, isPhone, overlayOpen, t } from './dom.js';
+import { acquire as acquireOverlay, release as releaseOverlay } from './overlay.js';
 
 const ROOT_ID = 'imsg-backgrounds';
 const ALL = 'all';
@@ -16,6 +17,7 @@ let view = { source: ALL, needle: '', picked: false };
 let folderMap = {};
 let observer = null;
 let redrawTimer = 0;
+let overlayToken = null;
 
 // ── The app's hidden panel ──
 
@@ -307,6 +309,10 @@ function scheduleRedraw() {
 }
 
 function close() {
+    if (overlayToken) {
+        releaseOverlay(overlayToken);
+        overlayToken = null;
+    }
     document.getElementById(ROOT_ID)?.remove();
     document.removeEventListener('keydown', onKey, true);
     observer?.disconnect();
@@ -385,6 +391,7 @@ export async function openBackgrounds() {
         }
     }
     await loadFolderMap();
+    overlayToken = acquireOverlay('backgrounds');
     render();
 }
 

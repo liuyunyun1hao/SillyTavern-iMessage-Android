@@ -8,6 +8,7 @@
 import { getSettings, saveSettings } from './config.js';
 import { isOn, onStart, onStop, whenOn } from './power.js';
 import { element, t, within } from './dom.js';
+import { acquire as acquireOverlay, release as releaseOverlay } from './overlay.js';
 
 const PANEL_ID = 'imsg-customize';
 const STYLE_ID = 'imsg-custom-style';
@@ -244,6 +245,7 @@ const SECTIONS = [
 const TOKEN_KEYS = new Set(SECTIONS.flatMap((section) => section.controls.filter((c) => c.token).flatMap((c) => [c.token, ...(c.also ?? [])])));
 const FLAG_KEYS = new Set([...SECTIONS.flatMap((section) => section.controls.filter((c) => c.flag).map((c) => c.flag)), 'liquidglass']);
 
+let overlayToken = null;
 let options = {
     setSetting: () => {},
     pickBackground: () => {},
@@ -659,6 +661,10 @@ function importCustomize(refresh) {
 }
 
 function closePanel() {
+    if (overlayToken) {
+        releaseOverlay(overlayToken);
+        overlayToken = null;
+    }
     document.getElementById(PANEL_ID)?.remove();
     document.querySelector('.imsg-cz-scrim')?.remove();
     document.body.classList.remove('imsg-customizing');
@@ -766,6 +772,7 @@ export function openCustomize() {
     scrim.addEventListener('click', closePanel);
     document.body.append(scrim, panel);
     document.body.classList.add('imsg-customizing');
+    overlayToken = acquireOverlay('customize');
     done.focus({ preventScroll: true });
 }
 

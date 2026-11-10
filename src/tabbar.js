@@ -3,8 +3,9 @@
 // 三页都只建一次，来回切只是显示/隐藏，点起来才跟手。
 
 import * as personas from '../../../../personas.js';
-import { button, element, glyph, setPicture, t } from './dom.js';
-import { closeContacts, openContacts, openMyCard } from './contacts.js';
+import { button, element, glyph, isPhone, setPicture, t } from './dom.js';
+import { destroyContactsPage, hideContactsPage, openContacts, openMyCard, resetContactsDetail, showContactsPage } from './contacts.js';
+import { enter as enterEntry, exit as exitEntry } from './history.js';
 import { monogramize } from './monograms.js';
 import { openCustomize } from './customize.js';
 import { clickOption, openAppearanceMenu, openPanelById } from './shell.js';
@@ -13,8 +14,6 @@ import { BUILD } from './build.js';
 
 const BAR_ID = 'imsg-tabbar';
 const ME_ID = 'imsg-me';
-const CN_ID = 'imsg-contacts';
-const HIDDEN = 'imsg-hidden';
 const RETURN_KEY = 'imsg-return-tab';
 
 const TABS = [
@@ -32,28 +31,76 @@ function setActive(key) {
     }
 }
 
-/** Which tab was showing when Contacts was opened, so closing it can put that tab back. */
-let contactsFrom = 'chat';
+/** The open Contacts tab has one history entry, so Android's back key leaves the page. */
+let contactsEntry = null;
+
+/** Shows or hides one first-level page, keeping focus and assistive tech in step. */
+function setPageVisible(root, visible) {
+    if (!root) {
+        return;
+    }
+    root.classList.toggle('imsg-hidden', !visible);
+    root.toggleAttribute('inert', !visible);
+    root.setAttribute('aria-hidden', String(!visible));
+}
+
+/** The chat page is SillyTavern's own DOM: it is behind the others, so mark it inert too. */
+function setChatVisible(visible) {
+    for (const id of ['imsg-sidebar', 'sheld']) {
+        const node = document.getElementById(id);
+        if (!node) {
+            continue;
+        }
+        node.toggleAttribute('inert', !visible);
+        node.setAttribute('aria-hidden', String(!visible));
+    }
+}
+
+/** Leaves the Contacts tab, dropping its history entry when we close it ourselves. */
+function leaveContacts() {
+    resetContactsDetail();
+    if (contactsEntry) {
+        const entry = contactsEntry;
+        contactsEntry = null;
+        exitEntry(entry);
+    }
+    hideContactsPage();
+}
 
 /**
  * Switches page and highlights its tab. Everything that changes pages goes through here.
- * Contacts is a modal, not a page: the page below it is never hidden, only covered.
+ * Contacts is a first-level page on a phone (same lifecycle as Me); on a desktop there is no
+ * page surface, so the menu entry keeps opening the secondary window.
  */
 function activateTab(key) {
-    if (key === 'contacts') {
-        if (document.body.dataset.imsgTab !== 'contacts') {
-            contactsFrom = document.body.dataset.imsgTab === 'me' ? 'me' : 'chat';
+    if (!isPhone()) {
+        if (key === 'contacts') {
+            openContacts();
+            return;
         }
-        showContacts();
-        setActive('contacts');
+        hideMe();
+        setChatVisible(true);
         return;
     }
-    closeContacts();
-    if (key === 'chat') {
-        hideMe();
-        document.body.classList.remove('imsg-m-chat');
-    } else {
+    if (key === 'contacts') {
+        setPageVisible(document.getElementById(ME_ID), false);
+        showContactsPage();
+        setChatVisible(false);
+        if (!contactsEntry) {
+            contactsEntry = enterEntry('contacts-tab', () => {
+                contactsEntry = null;
+                activateTab('chat');
+            });
+        }
+    } else if (key === 'me') {
+        leaveContacts();
         showMe();
+        setChatVisible(false);
+    } else {
+        // the open conversation stays open: `imsg-m-chat` belongs to the chat's own lifecycle
+        leaveContacts();
+        hideMe();
+        setChatVisible(true);
     }
     setActive(key);
 }
@@ -70,33 +117,6 @@ function restoreTab() {
     }
     sessionStorage.removeItem(RETURN_KEY);
     activateTab(key);
-}
-
-/* ── 联系人：全屏弹窗，复用插件的通讯录，点一行直接进对话 ── */
-
-function showContacts() {
-    const root = document.getElementById(CN_ID);
-    if (root) {
-        root.classList.remove(HIDDEN);
-        return;
-    }
-    openContacts({
-        direct: true,
-        onClose: (reason) => {
-            // the window is already gone here; decide where the tab bar points next
-            if (reason === 'tab') {
-                return;
-            }
-            if (reason === 'pick') {
-                activateTab('chat');
-                return;
-            }
-            setActive(contactsFrom);
-            if (contactsFrom === 'me') {
-                showMe();
-            }
-        },
-    });
 }
 
 /* ── 我的 ── */
@@ -225,7 +245,7 @@ function buildMe() {
 
 function showMe() {
     const root = document.getElementById(ME_ID) ?? buildMe();
-    root.classList.remove(HIDDEN);
+    setPageVisible(root, true);
     // 每次进「我的」都对一遍当前人设
     const profileBox = root.querySelector('.imsg-me-profile');
     if (profileBox) {
@@ -234,7 +254,7 @@ function showMe() {
 }
 
 function hideMe() {
-    document.getElementById(ME_ID)?.classList.add(HIDDEN);
+    setPageVisible(document.getElementById(ME_ID), false);
 }
 
 /* ── 底栏 ── */
@@ -261,8 +281,12 @@ function build() {
 /** Contacts can hand the app over to a conversation without going through activateTab. */
 function onTabEvent(event) {
     if (event?.detail?.key) {
-        setActive(event.detail.key);
+        activateTab(event.detail.key);
     }
+}
+
+function onContactsEscape() {
+    activateTab('chat');
 }
 
 export function initTabbar() {
@@ -272,15 +296,18 @@ export function initTabbar() {
             build();
         }
         window.addEventListener('imsg:tab', onTabEvent);
+        window.addEventListener('imsg:contacts-escape', onContactsEscape);
         restoreTab();
     });
     onStop(() => {
         window.removeEventListener('imsg:tab', onTabEvent);
+        window.removeEventListener('imsg:contacts-escape', onContactsEscape);
         removeTabbar();
     });
 }
 
 export function removeTabbar() {
+    destroyContactsPage();
     document.getElementById(BAR_ID)?.remove();
     document.getElementById(ME_ID)?.remove();
     document.body.classList.remove('imsg-tabs');

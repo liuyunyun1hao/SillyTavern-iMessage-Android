@@ -7,6 +7,7 @@ import { toggleMenu } from './shell.js';
 import { host, releaseAll } from './host.js';
 import { onStop } from './power.js';
 import { button, context, element, escapeHtml, glyph, isPhone, overlayOpen, t } from './dom.js';
+import { acquire as acquireOverlay, release as releaseOverlay } from './overlay.js';
 
 const ROOT_ID = 'imsg-extensions';
 const MANAGE = '__manage__';
@@ -14,6 +15,7 @@ const TILE_COLORS = ['#0a84ff', '#30b0c7', '#34c759', '#ff9f0a', '#ff375f', '#bf
 
 let view = { key: MANAGE, level: 0, needle: '' };
 let needsReload = false;
+let overlayToken = null;
 
 function hash(text) {
     let value = 0;
@@ -386,6 +388,10 @@ function render() {
 }
 
 function close() {
+    if (overlayToken) {
+        releaseOverlay(overlayToken);
+        overlayToken = null;
+    }
     releaseAll();
     document.getElementById(ROOT_ID)?.remove();
     document.removeEventListener('keydown', onKey, true);
@@ -461,6 +467,7 @@ export function openExtensions(title = null) {
     });
     document.body.append(root);
     document.addEventListener('keydown', onKey, true);
+    overlayToken = acquireOverlay('extensions');
     render();
 }
 

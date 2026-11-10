@@ -356,7 +356,7 @@ body.imessage .imsg-cn-sort:active {
 }
 
 /* 手机进对话后不再占一条底栏，和 iOS 一样把高度还给消息 */
-body.imessage.imsg-m-chat .imsg-tabbar:not(.imsg-tabbar-docked) {
+body.imessage.imsg-m-chat .imsg-tabbar {
     display: none;
 }
 body.imessage.imsg-m-chat #sheld {
@@ -404,11 +404,11 @@ body.imessage:has(#imsg-contacts.imsg-cn-picking) .imsg-search:focus-within {
 }
 
 /* 任何全屏面板（扩展、设置、连接、格式化和后续新增的）都让底栏让位，避免最后几行被盖住 */
-body.imessage:has(> .imsg-cn:not(#imsg-contacts)) .imsg-tabbar {
+body.imessage:has(> .imsg-cn:not(#imsg-contacts):not(.imsg-cn-page)) .imsg-tabbar {
     display: none;
 }
 
-body.imessage:has(> .imsg-cn:not(#imsg-contacts)) .imsg-cn {
+body.imessage:has(> .imsg-cn:not(#imsg-contacts):not(.imsg-cn-page)) .imsg-cn {
     padding-bottom: 0;
 }
 
@@ -419,4 +419,11 @@ body.imessage:has(#imsg-sidebar.imsg-editing) .imsg-tabbar {
 
 body.imessage:has(#imsg-sidebar.imsg-editing) #sheld {
     padding-bottom: 0;
+}
+
+
+/* 二级界面（弹窗/选择器/面板/抽屉）统一通过 overlay 注册表拿走底栏；
+   :has() 规则继续作为兜底 */
+body.imessage.imsg-overlay > .imsg-tabbar {
+    display: none;
 }

@@ -6,6 +6,7 @@ import * as wi from '../../../../world-info.js';
 import { events, onStop } from './power.js';
 import { toggleMenu, reopenMenu } from './shell.js';
 import { button, context, element, escapeHtml, glyph, isPhone, overlayOpen, t } from './dom.js';
+import { acquire as acquireOverlay, release as releaseOverlay } from './overlay.js';
 
 const ROOT_ID = 'imsg-worldinfo';
 const SETTINGS = '__settings__';
@@ -48,6 +49,7 @@ const SCAN_FLAGS = [
 ];
 
 let view = { book: null, uid: null, level: 0, needle: '' };
+let overlayToken = null;
 let bookData = null;
 let saveTimer = 0;
 
@@ -636,6 +638,10 @@ function render() {
 }
 
 function close() {
+    if (overlayToken) {
+        releaseOverlay(overlayToken);
+        overlayToken = null;
+    }
     clearTimeout(saveTimer);
     document.getElementById(ROOT_ID)?.remove();
     document.removeEventListener('keydown', onKey, true);
@@ -692,6 +698,7 @@ export async function openWorldInfo(name = null) {
     });
     document.body.append(root);
     document.addEventListener('keydown', onKey, true);
+    overlayToken = acquireOverlay('worldinfo');
     render();
 }
 
