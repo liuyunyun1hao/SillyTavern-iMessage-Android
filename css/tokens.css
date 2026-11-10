@@ -17,6 +17,8 @@ body.imessage {
 
     /* Surfaces */
     --imsg-window: #ffffff;
+    /* 一级页面卡片面：和聊天列表的纯白/纯黑区分开，保证分组页卡片有层次 */
+    --imsg-page-card: #ffffff;
     --imsg-sidebar: #ececec;
     --imsg-toolbar: rgba(255, 255, 255, 0.82);
     --imsg-sheet: #f2f2f2;
@@ -24,6 +26,8 @@ body.imessage {
     --imsg-field: #ffffff;
     --imsg-select-arrow: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 12'%3E%3Cpath d='M1 4.5 4 1.5l3 3M1 7.5l3 3 3-3' fill='none' stroke='%236e6e73' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
     --imsg-search: rgba(0, 0, 0, 0.06);
+    /* 搜索框统一底色：不随页面底色/模糊变化，三个页面完全一致 */
+    --imsg-search-fill: #e9e9eb;
     --imsg-hover: rgba(0, 0, 0, 0.05);
     --imsg-pressed-bg: rgba(0, 0, 0, 0.1);
     --imsg-selected: #0a82ff;
@@ -164,6 +168,7 @@ body.imessage.imsg-dark {
     --imsg-card: rgba(255, 255, 255, 0.04);
 
     --imsg-window: #1e1e1e;
+    --imsg-page-card: #1c1c1e;
     --imsg-sidebar: #2b2b2d;
     --imsg-toolbar: rgba(30, 30, 30, 0.82);
     --imsg-sheet: #2a2a2c;
@@ -171,6 +176,7 @@ body.imessage.imsg-dark {
     --imsg-field: rgba(255, 255, 255, 0.06);
     --imsg-select-arrow: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 12'%3E%3Cpath d='M1 4.5 4 1.5l3 3M1 7.5l3 3 3-3' fill='none' stroke='%23aeaeb2' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
     --imsg-search: rgba(255, 255, 255, 0.08);
+    --imsg-search-fill: #2c2c2e;
     --imsg-hover: rgba(255, 255, 255, 0.06);
     --imsg-pressed-bg: rgba(255, 255, 255, 0.12);
     --imsg-selected: #0a74e6;
