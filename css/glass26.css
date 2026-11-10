@@ -338,18 +338,8 @@ body.imessage:has(> .imsg-cn.imsg-cn-sheet) .imsg-tabbar {
     display: none;
 }
 
-/* ── 动画：切页淡入、按压抬起；尊重系统的减少动态 ── */
-
-body.imessage .imsg-me:not(.imsg-hidden) {
-    animation: imsg-g26-page 0.26s var(--imsg-ease);
-}
-
-@keyframes imsg-g26-page {
-    from {
-        opacity: 0;
-        transform: translateY(6px);
-    }
-}
+/* ── 按压抬起；尊重系统的减少动态 ──
+   三个一级页面统一切换，不加淡入/位移动画（联系人页也没有） */
 
 @media (prefers-reduced-motion: reduce) {
     body.imessage .imsg-cn.imsg-cn-sheet .imsg-cn-window,
