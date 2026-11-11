@@ -119,7 +119,7 @@ body.imessage .imsg-tabbar {
 body.imessage .imsg-tab {
     margin: 5px 6px;
     padding: 2px 0;
-    border-radius: 20px;
+    border-radius: 999px;
     transition: color 0.12s linear, background-color 0.16s var(--imsg-ease);
 }
 
@@ -1029,4 +1029,51 @@ body.imessage.imsg-dark.no-blur .imsg-me-group,
 body.imessage.imsg-dark.no-blur .imsg-cn.imsg-cn-page .imsg-cn-row,
 body.imessage.imsg-dark.no-blur .imsg-cn.imsg-cn-page .imsg-cn-scroll > .imsg-cn-row {
     background: rgba(32, 32, 38, 0.98);
+}
+
+/* ── 圆角与组件尺度统一 ──
+   卡片 14 / 小卡与缩略图 12 / 控件 10 / 胶囊 999 / 圆形 50%。
+   这里只收拢一级页面与其二级界面上真正会同时出现的组件，不动聊天气泡等专属形状。 */
+/* 圆角落在缩略图本身，不能落在整块 tile 上（tile 里还有名称标签，会被裁掉） */
+body.imessage .imsg-bg-frame {
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+body.imessage .imsg-card-popup {
+    border-radius: 14px;
+}
+
+body.imessage .imsg-cn-sheet .imsg-cn-window {
+    border-radius: 24px;
+}
+
+body.imessage .imsg-cn-sheet .imsg-cn-card,
+body.imessage .imsg-cn-members .imsg-cn-member,
+body.imessage .imsg-cn-form .imsg-cn-card {
+    border-radius: 14px;
+}
+
+body.imessage .imsg-cn-save {
+    border-radius: 10px;
+}
+
+/* 分组标题：一级页面与弹窗/选择器同一字号、字重与灰阶 */
+body.imessage .imsg-cn .imsg-cn-section-title,
+body.imessage .imsg-cn.imsg-cn-modal .imsg-cn-section-title {
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+}
+
+/* 选择器/弹窗里的联系人行用和一级页面相同的行高与字号 */
+body.imessage #imsg-contacts:not(.imsg-cn-page) .imsg-cn-row {
+    min-height: 60px;
+    font-size: 17px;
+}
+
+/* 搜索框在弹窗/选择器里也用同一块灰面（压过移动端按深浅色写死的 .imsg-dark .imsg-search） */
+body.imessage .imsg-cn .imsg-search.imsg-cn-search {
+    background: var(--imsg-search-fill);
+    border: 0;
 }
